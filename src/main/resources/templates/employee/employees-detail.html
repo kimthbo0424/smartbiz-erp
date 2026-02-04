@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section class="d-flex justify-content-left">
+  <div class="w-100">
+
+    <div class="d-flex align-items-center mb-3">
+      <h2 class="fw-bold me-auto">직원 상세정보</h2>
+      <a th:href="@{/employees}" class="btn btn-outline-secondary btn-sm">목록으로</a>
+    </div>
+
+    <div class="card shadow-sm p-3">
+      <table class="table table-responsive align-middle mb-0">
+        <tbody>
+        <tr>
+          <th style="width:20%;">ID</th>
+          <td th:text="${employee.employeeId}">1</td>
+        </tr>
+        <tr>
+          <th>이름</th>
+          <td th:text="${employee.name}">홍길동</td>
+        </tr>
+        <tr>
+          <th>부서</th>
+          <td th:text="${deptName}">본부</td>
+        </tr>
+        <tr>
+          <th>직급</th>
+          <td th:text="${rankName}">사원</td>
+        </tr>
+        <tr>
+          <th>직책</th>
+          <td th:text="${titleName != null && !#strings.isEmpty(titleName) ? titleName : '없음'}">없음</td>
+        </tr>
+        <tr>
+          <th>주민등록번호</th>
+          <td th:text="${#strings.substring(employee.jumin, 0, 6)} + '-*******'">000000-*******</td>
+        </tr>
+        <tr>
+          <th>전화번호</th>
+          <td th:text="${employee.phone}">01000000000</td>
+        </tr>
+        <tr>
+          <th>이메일</th>
+          <td th:text="${employee.email}">test@example.com</td>
+        </tr>
+        <tr>
+          <th>주소</th>
+          <td th:text="${employee.address}">서울</td>
+        </tr>
+        <tr>
+          <th>입사일</th>
+          <td th:text="${#temporals.format(employee.hireDate, 'yyyy-MM-dd')}">2025-11-24</td>
+        </tr>
+        <tr>
+          <th>퇴사일</th>
+          <td th:text="${employee.retireDate != null ? #temporals.format(employee.retireDate, 'yyyy-MM-dd') : '-'}">-</td>
+        </tr>
+        <tr>
+          <th>상태</th>
+          <td th:text="${employee.status}">재직</td>
+        </tr>
+        <tr>
+          <th>기본급</th>
+          <td th:text="${employee.baseSalary}">0</td>
+        </tr>
+        <tr>
+          <th>급여 계좌</th>
+          <td>
+            <span th:text="${employee.bankName}">은행명</span>
+            <span th:text="${employee.bankAccount}">계좌</span>
+          </td>
+        </tr>
+        <tr>
+          <th>권한</th>
+          <td th:text="${employee.auth == 1 ? 'ADMIN' : (employee.auth == 2 ? 'HR' : 'USER')}">USER</td>
+        </tr>
+        <tr>
+          <th>사용여부</th>
+          <td th:text="${employee.useYn}">Y</td>
+        </tr>
+        <tr>
+          <th>마지막 로그인</th>
+          <td th:text="${employee.lastLoginAt != null ? #temporals.format(employee.lastLoginAt, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
+        </tr>
+
+        </tbody>
+      </table>
+
+	  <div th:if="${(session.auth != null and session.auth <= 2) or (session.employeeId != null and session.employeeId == employee.employeeId)}"
+	       class="mt-4 text-end">
+	    <a th:href="@{/employee/form(id=${employee.employeeId})}"
+	       class="btn btn-primary btn-sm me-2">수정</a>
+
+	    <form th:action="@{/employee/delete(id=${employee.employeeId})}"
+	          method="post" class="d-inline">
+	      <button type="submit"
+	              class="btn btn-outline-danger btn-sm"
+	              onclick="return confirm('해당 직원을 삭제하시겠습니까');">
+	        삭제
+	      </button>
+	    </form>
+	  </div>
+    </div>
+
+  </div>
+</section>
+</body>
+</html>

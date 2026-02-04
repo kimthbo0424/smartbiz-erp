@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+
+<body>
+<section>
+    <h2 class="fw-bold mb-4">재고 이동 등록</h2>
+
+    <form id="moveForm"
+          class="bg-white p-4 rounded shadow-sm"
+          onsubmit="submitMove(); return false;">
+
+        <!-- 상품 -->
+        <div class="mb-3">
+            <label class="form-label">상품</label>
+            <select id="productId" class="form-select">
+                <option value="">상품 선택</option>
+            </select>
+        </div>
+
+        <!-- 출발 창고 -->
+        <div class="mb-3">
+            <label class="form-label">출발 창고</label>
+            <select id="fromWarehouseId" class="form-select">
+                <option value="">출발 창고 선택</option>
+            </select>
+        </div>
+
+        <!-- 도착 창고 -->
+        <div class="mb-3">
+            <label class="form-label">도착 창고</label>
+            <select id="toWarehouseId" class="form-select">
+                <option value="">도착 창고 선택</option>
+            </select>
+        </div>
+
+        <!-- 수량 -->
+        <div class="mb-3">
+            <label class="form-label">이동 수량</label>
+            <input type="number"
+                   id="quantity"
+                   class="form-control"
+                   min="1">
+        </div>
+
+        <!-- 사유 -->
+        <div class="mb-3">
+            <label class="form-label">사유</label>
+            <input type="text"
+                   id="reason"
+                   class="form-control"
+                   placeholder="예: 창고 위치 변경">
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            재고 이동
+        </button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadProducts();
+            await loadWarehouses();
+        });
+
+        // 상품 로드
+        async function loadProducts() {
+            try {
+                const res = await fetch("/api/products");
+                if (!res.ok) throw new Error("상품 API 호출 실패");
+
+                const result = await res.json();
+                if (!result.success) throw new Error(result.message);
+
+                const products = result.data;
+                const select = document.getElementById("productId");
+
+                select.innerHTML = `<option value="">상품 선택</option>`;
+
+                products.forEach(p => {
+                    const opt = document.createElement("option");
+                    opt.value = p.id;        // ✅ productId → id
+                    opt.textContent = p.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error(e);
+                alert("상품 목록을 불러오지 못했습니다.");
+            }
+        }
+
+        // 창고 로드
+        async function loadWarehouses() {
+            try {
+                const res = await fetch("/api/warehouse");
+                if (!res.ok) throw new Error("창고 API 호출 실패");
+
+                const result = await res.json();
+                if (!result.success) throw new Error(result.message);
+
+                const warehouses = result.data;
+
+                const fromSel = document.getElementById("fromWarehouseId");
+                const toSel = document.getElementById("toWarehouseId");
+
+                fromSel.innerHTML = `<option value="">출발 창고 선택</option>`;
+                toSel.innerHTML = `<option value="">도착 창고 선택</option>`;
+
+                warehouses.forEach(w => {
+                    const opt1 = document.createElement("option");
+                    opt1.value = w.id;
+                    opt1.textContent = w.name;
+
+                    const opt2 = opt1.cloneNode(true);
+
+                    fromSel.appendChild(opt1);
+                    toSel.appendChild(opt2);
+                });
+            } catch (e) {
+                console.error(e);
+                alert("창고 목록을 불러오지 못했습니다.");
+            }
+        }
+
+        // 재고 이동
+        async function submitMove() {
+            const productId = document.getElementById("productId").value;
+            const fromWarehouseId = document.getElementById("fromWarehouseId").value;
+            const toWarehouseId = document.getElementById("toWarehouseId").value;
+            const quantity = document.getElementById("quantity").value;
+            const reason = document.getElementById("reason").value.trim();
+
+            if (!productId || !fromWarehouseId || !toWarehouseId || !quantity) {
+                alert("모든 항목을 입력해주세요.");
+                return;
+            }
+
+            if (fromWarehouseId === toWarehouseId) {
+                alert("출발 창고와 도착 창고는 같을 수 없습니다.");
+                return;
+            }
+
+            const data = {
+                productId: Number(productId),
+                fromWarehouseId: Number(fromWarehouseId),
+                toWarehouseId: Number(toWarehouseId),
+                quantity: Number(quantity),
+                reason: reason || null
+            };
+
+            try {
+                const res = await fetch("/api/inventory/move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) throw new Error("이동 처리 실패");
+
+                const result = await res.json();
+                if (!result.success) {
+                    alert(result.message || "재고 이동 실패");
+                    return;
+                }
+
+                alert("재고 이동이 완료되었습니다.");
+                location.href = "/inventory/move";
+            } catch (e) {
+                console.error(e);
+                alert("재고 이동 중 오류가 발생했습니다.");
+            }
+        }
+    </script>
+</section>
+</body>
+</html>

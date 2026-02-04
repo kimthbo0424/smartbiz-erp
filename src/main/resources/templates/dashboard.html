@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+  <h2 class="mb-4 fw-bold">대시보드</h2>
+
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-3">
+      <div class="card text-center p-3 shadow-sm">
+        <div class="text-muted">금월 인건비</div>
+        <div class="fs-4 fw-bold"
+             th:text="${#numbers.formatInteger(kpi.monthLaborCost, 0, 'COMMA')}">0</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3">
+      <div class="card text-center p-3 shadow-sm">
+        <div class="text-muted">금일 근태 이상</div>
+        <div class="fs-4 fw-bold" th:text="${kpi.attendanceIssueCount}">0</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3">
+      <div class="card text-center p-3 shadow-sm">
+        <div class="text-muted">지급률</div>
+        <div class="fs-4 fw-bold" th:text="${kpi.payRatePercent + '%'}">0%</div>
+      </div>
+    </div>
+
+	<div class="col-12 col-lg-3">
+	  <div class="card text-center p-3 shadow-sm">
+	    <div class="text-muted">금월 미확정 급여</div>
+	    <div class="fs-4 fw-bold" th:text="${kpi.headcount}">0</div>
+	  </div>
+	</div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-xl-6">
+		<div class="card p-3 shadow-sm" style="height:360px;">
+		  <div class="d-flex align-items-center mb-2">
+		    <h5 class="mb-0 fw-bold">월별 급여 지출 추세</h5>
+		    <span class="ms-auto small text-muted">최근 4개월</span>
+		  </div>
+
+		  <div class="border rounded p-3" style="height:300px;">
+		    <canvas id="payrollBarChart"></canvas>
+		  </div>
+		</div>
+    </div>
+
+	<div class="col-12 col-md-6 col-xl-3">
+	  <div class="card shadow-sm" style="min-height:360px;">
+
+	    <div class="p-3">
+	      <h5 class="fw-bold mb-3">문의 처리 현황</h5>
+
+	      <div class="d-flex justify-content-between align-items-center mb-2">
+	        <span class="text-muted">미처리</span>
+	        <span class="fw-bold"
+	              th:text="${supportSummary != null ? supportSummary.pendingCount : 0}">0</span>
+	      </div>
+
+	      <div class="d-flex justify-content-between align-items-center mb-2">
+	        <span class="text-muted">접수 전</span>
+	        <span class="fw-semibold"
+	              th:text="${supportSummary != null ? supportSummary.draftCount : 0}">0</span>
+	      </div>
+
+	      <div class="d-flex justify-content-between align-items-center mb-2">
+	        <span class="text-muted">접수</span>
+	        <span class="fw-semibold"
+	              th:text="${supportSummary != null ? supportSummary.receivedCount : 0}">0</span>
+	      </div>
+
+	      <div class="d-flex justify-content-between align-items-center">
+	        <span class="text-muted">처리 완료</span>
+	        <span class="fw-semibold"
+	              th:text="${supportSummary != null ? supportSummary.answeredCount : 0}">0</span>
+	      </div>
+	    </div>
+
+	    <div class="border-top p-3">
+	      <div class="fw-bold mb-2">최근 백업</div>
+
+	      <div class="small text-muted"
+	           th:text="${latestBackupTime != null ? #temporals.format(latestBackupTime, 'yyyy-MM-dd HH:mm') : '백업 이력 없음'}">
+	        백업 이력 없음
+	      </div>
+	    </div>
+
+	  </div>
+	</div>
+
+	<div class="col-12 col-md-6 col-xl-3">
+	  <div class="card p-3 shadow-sm" style="min-height:360px;">
+	    <h5 class="fw-bold mb-3">공지사항</h5>
+
+	    <div class="list-group small">
+	      <a th:each="n : ${notices}"
+	         class="list-group-item list-group-item-action d-flex align-items-center"
+	         th:href="@{/notice-detail/{id}(id=${n.noticeId})}">
+
+	        <span th:if="${n.pinnedYn == 'Y'}"
+	              class="badge text-bg-secondary me-2">고정</span>
+
+	        <span class="text-truncate" th:text="${n.title}">공지 제목</span>
+	      </a>
+
+		  <div th:if="${#lists.isEmpty(notices)}"
+		       class="list-group-item text-muted small">
+	        게시된 공지사항이 없습니다
+	      </div>
+	    </div>
+	  </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card p-3 shadow-sm" style="min-height:260px;">
+        <div class="d-flex align-items-center mb-2">
+          <h5 class="mb-0 fw-bold">최근 활동</h5>
+          <span class="ms-auto small text-muted">최대 10건</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+            <tr>
+              <th>시간</th>
+              <th>대상</th>
+              <th>구분</th>
+              <th>상세</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(activities)}">
+              <td colspan="4" class="text-muted text-center py-3">데이터 없음</td>
+            </tr>
+            <tr th:each="a : ${activities}">
+              <td th:text="${#temporals.format(a.time, 'yyyy-MM-dd HH:mm')}">2025-12-29 11:00</td>
+              <td th:text="${a.actor}">1</td>
+              <td th:text="${a.action}">급여</td>
+              <td th:text="${a.detail}">detail</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script th:inline="javascript">
+    const barLabels = /*[[${recent4MonthsLabels}]]*/ [];
+    const barValues = /*[[${recent4MonthsValues}]]*/ [];
+
+    const ctx = document.getElementById("payrollBarChart");
+	new Chart(ctx, {
+	  type: "bar",
+	  data: {
+	    labels: barLabels,
+	    datasets: [{
+	      label: "급여 지출",
+	      data: barValues
+	    }]
+	  },
+	  options: {
+	    responsive: true,
+	    maintainAspectRatio: false,
+	    plugins: {
+	      legend: { display: false }
+	    },
+	    scales: {
+	      y: { beginAtZero: true }
+	    }
+	  }
+	});
+  </script>
+</section>
+</body>
+</html>

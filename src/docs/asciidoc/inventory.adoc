@@ -1,0 +1,26 @@
+[[inventory]]
+== 재고 관리 API
+
+=== 재고 현황 조회
+
+GET `/api/inventory`
+
+==== 요청 파라미터
+|===
+|이름 |설명
+
+|warehouseId
+|창고 ID
+
+|page
+|페이지 번호 (0부터 시작)
+
+|size
+|페이지 크기
+|===
+
+==== 응답 필드
+include::{snippets}/inventory-get/response-fields.adoc[]
+
+==== 응답 예시
+include::{snippets}/inventory-get/response-body.adoc[]

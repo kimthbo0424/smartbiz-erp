@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+
+<section>
+  <h2 class="fw-bold mb-4">입출고 등록</h2>
+
+  <form class="bg-white p-4 rounded shadow-sm" onsubmit="return false;">
+
+    <!-- 상품 선택 -->
+    <div class="mb-3">
+      <label class="form-label">상품 선택</label>
+      <select id="productSelect" class="form-select">
+        <option value="">상품 선택</option>
+      </select>
+    </div>
+
+    <!-- 창고 선택 -->
+    <div class="mb-3">
+      <label class="form-label">창고 선택</label>
+      <select id="warehouseSelect" class="form-select">
+        <option value="">창고 선택</option>
+      </select>
+    </div>
+
+    <!-- 입출고 구분 -->
+    <div class="mb-3">
+      <label class="form-label">구분</label>
+      <select id="typeSelect" class="form-select">
+        <option value="IN">입고</option>
+        <option value="OUT">출고</option>
+      </select>
+    </div>
+
+    <!-- 수량 -->
+    <div class="mb-3">
+      <label class="form-label">수량</label>
+      <input id="quantity" type="number" min="1"
+             class="form-control" placeholder="수량 입력">
+    </div>
+
+    <!-- 담당 고객 -->
+    <div class="mb-3">
+      <label class="form-label">담당 고객 (선택)</label>
+      <input id="relatedClientId" type="number"
+             class="form-control" placeholder="거래처 ID 입력">
+    </div>
+
+    <!-- 사유 -->
+    <div class="mb-3">
+      <label class="form-label">사유</label>
+      <input id="reason" type="text"
+             class="form-control" placeholder="사유 입력">
+    </div>
+
+    <button type="button" onclick="submitForm()" class="btn btn-primary">
+      등록
+    </button>
+    <a href="/inventory/inout" class="btn btn-secondary">목록으로</a>
+
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProducts();
+      loadWarehouses();
+    });
+
+    /* ===============================
+       상품 목록
+       =============================== */
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/products");
+        const result = await res.json();
+
+        if (!result.success) {
+          alert("상품 목록 조회 실패");
+          return;
+        }
+
+        const products = result.data;
+        const select = document.getElementById("productSelect");
+        select.innerHTML = `<option value="">상품 선택</option>`;
+
+        products.forEach(p => {
+          select.insertAdjacentHTML(
+            "beforeend",
+            `<option value="${p.id}">${p.name}</option>`
+          );
+        });
+      } catch (e) {
+        console.error("상품 로드 실패", e);
+        alert("상품 목록을 불러오지 못했습니다.");
+      }
+    }
+
+    /* ===============================
+       창고 목록
+       =============================== */
+    async function loadWarehouses() {
+      try {
+        const res = await fetch("/api/warehouse");
+        const result = await res.json();
+
+        if (!result.success) {
+          alert("창고 목록 조회 실패");
+          return;
+        }
+
+        const warehouses = result.data;
+        const select = document.getElementById("warehouseSelect");
+        select.innerHTML = `<option value="">창고 선택</option>`;
+
+        warehouses.forEach(w => {
+          select.insertAdjacentHTML(
+            "beforeend",
+            `<option value="${w.id}">${w.name}</option>`
+          );
+        });
+      } catch (e) {
+        console.error("창고 로드 실패", e);
+        alert("창고 목록을 불러오지 못했습니다.");
+      }
+    }
+
+    /* ===============================
+       등록 처리
+       =============================== */
+    async function submitForm() {
+      const productId = document.getElementById("productSelect").value;
+      const warehouseId = document.getElementById("warehouseSelect").value;
+      const type = document.getElementById("typeSelect").value;
+      const quantity = document.getElementById("quantity").value;
+      const relatedClientId = document.getElementById("relatedClientId").value;
+      const reason = document.getElementById("reason").value.trim();
+
+      // 프론트 검증
+      if (!productId) {
+        alert("상품을 선택하세요.");
+        return;
+      }
+      if (!warehouseId) {
+        alert("창고를 선택하세요.");
+        return;
+      }
+      if (!quantity || Number(quantity) < 1) {
+        alert("수량은 1 이상이어야 합니다.");
+        return;
+      }
+
+      const data = {
+        productId: Number(productId),
+        warehouseId: Number(warehouseId),
+        quantity: Number(quantity),
+        reason: reason || null,
+        relatedClientId: relatedClientId ? Number(relatedClientId) : null
+      };
+
+      const url =
+        type === "IN"
+          ? "/api/inventory/in"
+          : "/api/inventory/out";
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+          alert(result.message || "등록 실패");
+          return;
+        }
+
+        alert("등록 완료");
+        location.href = "/inventory/inout";
+
+      } catch (e) {
+        console.error("등록 실패", e);
+        alert("서버 오류가 발생했습니다.");
+      }
+    }
+  </script>
+</section>
+
+</body>
+</html>

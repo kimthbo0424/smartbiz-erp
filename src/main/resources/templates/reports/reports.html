@@ -1,0 +1,199 @@
+<!-- src/main/resources/templates/reports/reports.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: layout(~{::section})">
+<body>
+<section class="container-fluid py-3">
+
+  <h2 class="mb-3 fw-bold">리포트 &amp; 분석</h2>
+
+  <form class="row g-2 mb-3" method="get" th:action="@{/reports}">
+    <div class="col-auto">
+      <label class="form-label small text-muted mb-1">From (yyyy-MM)</label>
+      <input class="form-control" type="month" name="fromMonth" th:value="${rq.fromMonth}">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small text-muted mb-1">To (yyyy-MM)</label>
+      <input class="form-control" type="month" name="toMonth" th:value="${rq.toMonth}">
+    </div>
+    <div class="col-auto align-self-end">
+      <button class="btn btn-primary">조회</button>
+    </div>
+  </form>
+
+  <!-- KPI -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">총 매출</div>
+          <div class="fs-4 fw-bold" th:text="${#numbers.formatInteger(report.totalSales, 0, 'COMMA')}">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">총 지출(비용)</div>
+          <div class="fs-4 fw-bold" th:text="${#numbers.formatInteger(report.totalCosts, 0, 'COMMA')}">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">순이익(매출-지출)</div>
+          <div class="fs-4 fw-bold" th:text="${#numbers.formatInteger(report.netProfit, 0, 'COMMA')}">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">주문수 / 전월대비</div>
+          <div class="fs-5 fw-bold">
+            <span th:text="${report.orderCount}">0</span>
+            <span class="text-muted small ms-2" th:text="${#numbers.formatDecimal(report.momGrowthRate, 1, 1)} + '%'">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="row g-3 mb-3">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="fw-bold mb-2">월별 매출 / 지출</div>
+          <canvas id="profitTrendChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="fw-bold mb-2">Top10 상품</div>
+          <canvas id="topProductsChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="fw-bold mb-2">Top10 거래처</div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+              <tr><th>거래처</th><th class="text-end">매출</th></tr>
+              </thead>
+              <tbody>
+              <tr th:each="r : ${report.partyRows}">
+                <td th:text="${r.party}">-</td>
+                <td class="text-end" th:text="${#numbers.formatInteger(r.sales, 0, 'COMMA')}">0</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(report.partyRows)}">
+                <td colspan="2" class="text-muted">데이터 없음</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Expenses -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="fw-bold mb-2">Top10 지출(비용 계정)</div>
+          <canvas id="topExpenseChart" height="120" class="mb-3"></canvas>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+              <tr><th>계정</th><th class="text-end">금액</th></tr>
+              </thead>
+              <tbody>
+              <tr th:each="e : ${report.topExpenses}">
+                <td th:text="${e.name}">-</td>
+                <td class="text-end" th:text="${#numbers.formatInteger(e.amount, 0, 'COMMA')}">0</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(report.topExpenses)}">
+                <td colspan="2" class="text-muted">POSTED 전표(비용 계정) 데이터 없음</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="fw-bold mt-3 mb-2">최근 지출 내역</div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+              <tr>
+                <th style="width:110px;">일자</th>
+                <th style="width:110px;">전표</th>
+                <th style="width:160px;">계정</th>
+                <th>내용</th>
+                <th class="text-end" style="width:130px;">금액</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="l : ${report.expenseLines}">
+                <td th:text="${l.date}">-</td>
+                <td th:text="${l.voucherNo}">-</td>
+                <td th:text="${l.accountName}">-</td>
+                <td th:text="${l.description}">-</td>
+                <td class="text-end" th:text="${#numbers.formatInteger(l.amount, 0, 'COMMA')}">0</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(report.expenseLines)}">
+                <td colspan="5" class="text-muted">데이터 없음</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script th:inline="javascript">
+    const trend = /*[[${report.profitTrendJson}]]*/ '{"labels":[],"sales":[],"costs":[]}';
+    const top10 = /*[[${report.top10Json}]]*/ '{"labels":[],"values":[]}';
+    const topExp = /*[[${report.topExpenseJson}]]*/ '{"labels":[],"values":[]}';
+
+    const trendObj = JSON.parse(trend);
+    const top10Obj = JSON.parse(top10);
+    const topExpObj = JSON.parse(topExp);
+
+    new Chart(document.getElementById('profitTrendChart'), {
+      type: 'line',
+      data: {
+        labels: trendObj.labels,
+        datasets: [
+          { label: '매출', data: trendObj.sales },
+          { label: '지출', data: trendObj.costs }
+        ]
+      }
+    });
+
+    new Chart(document.getElementById('topProductsChart'), {
+      type: 'bar',
+      data: { labels: top10Obj.labels, datasets: [{ label: '매출', data: top10Obj.values }] }
+    });
+
+    new Chart(document.getElementById('topExpenseChart'), {
+      type: 'bar',
+      data: { labels: topExpObj.labels, datasets: [{ label: '지출', data: topExpObj.values }] }
+    });
+  </script>
+
+</section>
+</body>
+</html>

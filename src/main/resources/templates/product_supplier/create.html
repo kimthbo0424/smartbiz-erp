@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+  <h2 class="mb-3 fw-bold">공급사 등록</h2>
+
+  <div class="card p-4 shadow-sm">
+
+    <!-- 🔹 상품 ID (컨트롤러에서 내려줌) -->
+    <input type="hidden" id="productId" th:value="${productId}">
+
+    <div class="mb-3">
+      <label class="form-label">공급사 (거래처)</label>
+      <select id="supplierId" class="form-select" required>
+        <option value="">공급사 선택</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">공급사 SKU</label>
+      <input type="text" id="supplierSku" class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">리드타임 (일)</label>
+      <input type="number" id="leadTime" class="form-control">
+    </div>
+
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="isPrimary">
+      <label class="form-check-label">대표 공급사</label>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-primary" onclick="submitCreate()">저장</button>
+      <a class="btn btn-secondary"
+         th:href="@{|/product-supplier/product/${productId}|}">
+        취소
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSuppliers();
+    });
+
+    async function loadSuppliers() {
+      const res = await fetch("/api/clients?type=SUPPLIER");
+      const result = await res.json();
+
+      if (!result.success) {
+        alert("공급사 목록 조회 실패");
+        return;
+      }
+
+      const select = document.getElementById("supplierId");
+      result.data.content.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+    }
+
+    async function submitCreate() {
+      const productId = Number(document.getElementById("productId").value);
+      const supplierId = document.getElementById("supplierId").value;
+
+      if (!supplierId) {
+        alert("공급사를 선택하세요.");
+        return;
+      }
+
+      const body = {
+        productId: productId,
+        supplierId: Number(supplierId),
+        supplierSku: document.getElementById("supplierSku").value || null,
+        leadTime: document.getElementById("leadTime").value
+                  ? Number(document.getElementById("leadTime").value)
+                  : null,
+        isPrimary: document.getElementById("isPrimary").checked
+      };
+	
+      const res = await fetch("/api/product-suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (res.status === 201) {
+        alert("공급사가 등록되었습니다.");
+        location.href = `/product-supplier/product/${productId}`;
+      } else {
+        alert("공급사 등록 실패");
+      }
+    }
+  </script>
+
+</section>
+</body>
+</html>

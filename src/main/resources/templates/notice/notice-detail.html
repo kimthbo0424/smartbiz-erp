@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="fw-bold me-auto">공지 상세</h2>
+    <a class="btn btn-outline-secondary btn-sm" th:href="@{/notices}">목록</a>
+  </div>
+
+  <div class="card p-3 shadow-sm">
+    <div class="d-flex align-items-center mb-2">
+      <h4 class="fw-bold mb-0" th:text="${post.title}">제목</h4>
+      <span th:if="${post.pinnedYn == 'Y'}" class="badge text-bg-secondary ms-2">고정</span>
+    </div>
+
+	<div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+	  <!-- 왼쪽: 메타 정보 -->
+	  <div>
+	    작성자:
+	    <span th:text="${post.writer != null ? post.writer.name : '-'}">-</span>
+	    /
+	    작성일:
+	    <span th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">-</span>
+	    /
+	    상태:
+	    <span th:text="${post.status != null ? post.status.label : '-'}">게시</span>
+	  </div>
+
+	  <!-- 오른쪽: 버튼 -->
+	  <div class="d-flex gap-2" th:if="${session.auth != null and session.auth <= 2}">
+	    <a class="btn btn-outline-secondary btn-sm"
+	       th:href="@{/notices/form(id=${post.noticeId})}">
+	      수정
+	    </a>
+
+	    <form th:action="@{/notices/delete}" method="post" class="d-inline"
+	          onsubmit="return confirm('정말 삭제하시겠습니까?');">
+	      <input type="hidden" name="id" th:value="${post.noticeId}">
+	      <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+	    </form>
+	  </div>
+	</div>
+
+    <hr>
+
+    <div style="white-space: pre-wrap;" th:text="${post.content}">
+      내용
+    </div>
+  </div>
+
+</section>
+</body>
+</html>

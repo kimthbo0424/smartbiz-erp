@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+  <h2 class="mb-3">담당자 등록</h2>
+
+  <div class="card p-4 shadow-sm">
+
+    <form th:action="@{/client/{id}/contacts/create(id=${client.id})}"
+          method="post"
+          th:object="${contact}">
+
+      <!-- 거래처 정보 (고정 표시) -->
+      <div class="mb-3">
+        <label class="form-label">거래처</label>
+        <input type="text" class="form-control"
+               th:value="${client.name}" readonly>
+      </div>
+
+      <!-- clientId hidden -->
+      <input type="hidden" th:field="*{clientId}"/>
+
+      <div class="mb-3">
+        <label class="form-label">이름</label>
+        <input type="text" class="form-control"
+               th:field="*{name}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">전화</label>
+        <input type="text" class="form-control"
+               th:field="*{phone}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">직함</label>
+        <input type="text" class="form-control"
+               th:field="*{position}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">이메일</label>
+        <input type="email" class="form-control"
+               th:field="*{email}">
+      </div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input"
+               type="checkbox"
+               th:field="*{primary}">
+        <label class="form-check-label">대표 담당자</label>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary">저장</button>
+        <a class="btn btn-secondary"
+           th:href="@{/client/detail/{id}(id=${client.id}, tab='contacts')}">
+          취소
+        </a>
+      </div>
+    </form>
+
+  </div>
+
+</section>
+</body>
+</html>

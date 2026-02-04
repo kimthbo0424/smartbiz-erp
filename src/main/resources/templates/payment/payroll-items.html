@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="fw-bold me-auto">급여 항목</h2>
+    <a th:href="@{/payroll-items/form}" class="btn btn-primary btn-sm">항목 추가</a>
+  </div>
+
+  <div class="card p-3 shadow-sm mb-3">
+    <form class="row g-2 align-items-center" method="get" th:action="@{/payroll-items}">
+      <div class="col-auto">
+        <input type="text" class="form-control form-control-sm"
+               name="q" th:value="${param.q}"
+               placeholder="코드 또는 명칭 검색">
+      </div>
+
+      <div class="col-auto">
+        <select class="form-select form-select-sm" name="itemType">
+          <option value="" th:selected="${param.itemType == null or param.itemType[0] == ''}">유형 전체</option>
+          <option value="ALLOWANCE" th:selected="${param.itemType != null and param.itemType[0] == 'ALLOWANCE'}">수당</option>
+          <option value="DEDUCTION" th:selected="${param.itemType != null and param.itemType[0] == 'DEDUCTION'}">공제</option>
+        </select>
+      </div>
+
+      <div class="col-auto">
+        <select class="form-select form-select-sm" name="calcType">
+          <option value="" th:selected="${param.calcType == null or param.calcType[0] == ''}">계산방식 전체</option>
+          <option value="FIXED" th:selected="${param.calcType != null and param.calcType[0] == 'FIXED'}">고정금액</option>
+          <option value="RATE" th:selected="${param.calcType != null and param.calcType[0] == 'RATE'}">비율</option>
+        </select>
+      </div>
+
+      <div class="col-auto">
+        <select class="form-select form-select-sm" name="useYn">
+          <option value="" th:selected="${param.useYn == null or param.useYn[0] == ''}">사용 전체</option>
+          <option value="Y" th:selected="${param.useYn != null and param.useYn[0] == 'Y'}">Y</option>
+          <option value="N" th:selected="${param.useYn != null and param.useYn[0] == 'N'}">N</option>
+        </select>
+      </div>
+
+      <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary btn-sm">조회</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle bg-white mb-0">
+      <thead class="table-light">
+      <tr>
+        <th>코드</th>
+        <th>명칭</th>
+        <th>유형</th>
+        <th>계산방식</th>
+        <th class="text-end">금액</th>
+        <th class="text-end">비율</th>
+        <th>사용</th>
+        <th style="width:160px;">액션</th>
+      </tr>
+      </thead>
+
+      <tbody>
+		<tr th:each="it : ${items}">
+		  <td th:text="${it.itemCode}">AL01</td>
+		  <td th:text="${it.itemName}">식대</td>
+
+		  <td>
+		    <span th:if="${it.itemType != null and it.itemType.name() == 'ALLOWANCE'}"
+		          class="badge text-bg-success">수당</span>
+		    <span th:if="${it.itemType != null and it.itemType.name() == 'DEDUCTION'}"
+		          class="badge text-bg-danger">공제</span>
+		  </td>
+
+		  <td>
+		    <span th:if="${it.calcType != null and it.calcType.name() == 'FIXED'}">고정금액</span>
+		    <span th:if="${it.calcType != null and it.calcType.name() == 'RATE'}">비율</span>
+		  </td>
+
+		  <td class="text-end"
+		      th:text="${it.calcType != null and it.calcType.name() == 'FIXED' and it.amount != null}
+		                ? ${#numbers.formatDecimal(it.amount, 0, 'COMMA', 0, 'POINT')}
+		                : '-'">
+		    -
+		  </td>
+
+		  <td class="text-end"
+		      th:text="${it.calcType != null and it.calcType.name() == 'RATE' and it.rate != null}
+		                ? ${#numbers.formatDecimal(it.rate, 1, 'POINT', 4, 'POINT')}
+		                : '-'">
+		    -
+		  </td>
+
+		  <td>
+		    <span th:if="${it.useYn == 'Y'}" class="badge text-bg-primary">Y</span>
+		    <span th:if="${it.useYn != 'Y'}" class="badge text-bg-secondary">N</span>
+		  </td>
+
+		  <td>
+		    <a class="btn btn-sm btn-outline-secondary"
+		       th:href="@{/payroll-items/form(id=${it.itemId})}">수정</a>
+
+		    <form th:action="@{/payroll-items/delete}" method="post" class="d-inline">
+		      <input type="hidden" name="id" th:value="${it.itemId}">
+		      <button type="submit" class="btn btn-sm btn-outline-danger"
+		              onclick="return confirm('삭제하시겠습니까')">삭제</button>
+		    </form>
+		  </td>
+		</tr>
+
+      <tr th:if="${#lists.isEmpty(items)}">
+        <td colspan="8" class="text-center text-muted py-4">조회 결과가 없습니다</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</body>
+</html>

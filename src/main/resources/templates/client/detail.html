@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+    <h2 class="fw-bold mb-4">거래처 상세 정보</h2>
+
+    <!-- 탭 -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${tab == 'info'} ? 'active'"
+               th:href="@{/client/detail/{id}(id=${client.id}, tab='info')}">
+                기본 정보
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${tab == 'contacts'} ? 'active'"
+               th:href="@{/client/detail/{id}(id=${client.id}, tab='contacts')}">
+                담당자
+            </a>
+        </li>
+    </ul>
+
+    <div class="card shadow-sm p-4">
+
+        <!-- 기본 정보 탭 -->
+        <div th:if="${tab == 'info'}">
+
+            <div class="mb-3"><strong>거래처명:</strong> <span th:text="${client.name}"></span></div>
+            <div class="mb-3"><strong>유형:</strong> <span th:text="${client.type}"></span></div>
+            <div class="mb-3"><strong>사업자번호:</strong> <span th:text="${client.bizNo}"></span></div>
+            <div class="mb-3"><strong>청구지 주소:</strong> <span th:text="${client.billingAddr}"></span></div>
+            <div class="mb-3"><strong>배송지 주소:</strong> <span th:text="${client.shippingAddr}"></span></div>
+            <div class="mb-3"><strong>신용한도:</strong> <span th:text="${client.creditLimit}"></span></div>
+            <div class="mb-3"><strong>결제 조건:</strong> <span th:text="${client.paymentTerms}"></span></div>
+            <div class="mb-3">
+                <strong>활성 여부:</strong>
+                <span th:text="${client.active} ? '활성' : '비활성'"></span>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a th:href="@{/client/list}" class="btn btn-secondary">목록</a>
+
+                <div class="d-flex gap-1">
+                    <a th:href="@{|/client/edit/${client.id}|}"
+                       class="btn btn-sm btn-outline-warning">
+                        수정
+                    </a>
+
+                    <button type="button"
+					        class="btn btn-sm btn-outline-danger"
+					        th:if="${client.active}"
+					        th:onclick="|deactivateClient(${client.id})|">
+					    비활성화
+					</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 담당자 탭 -->
+        <div th:if="${tab == 'contacts'}">
+
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="fw-bold">담당자 목록</h5>
+                <a class="btn btn-sm btn-primary"
+                   th:href="@{/client/{id}/contacts/create(id=${client.id})}">
+                    담당자 추가
+                </a>
+            </div>
+
+            <table class="table table-sm table-hover">
+                <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>직함</th>
+                    <th>전화</th>
+                    <th>이메일</th>
+                    <th>대표</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+				<tr th:each="c : ${contacts}">
+				    <td th:text="${c.name}"></td>
+				    <td th:text="${c.position}"></td>
+				    <td th:text="${c.phone}"></td>
+				    <td th:text="${c.email}"></td>
+				    <td>
+				        <span th:if="${c.primary}" class="badge bg-success">대표</span>
+				    </td>
+				    <td class="text-center">
+				        <div class="d-flex justify-content-center gap-1">
+				
+				            <!-- 수정 -->
+				            <a th:href="@{/client/{cid}/contacts/{id}/edit(
+				                            cid=${client.id},
+				                            id=${c.id})}"
+				               class="btn btn-sm btn-outline-secondary"
+				               title="수정">
+				               수정
+				            </a>
+				
+				            <!-- 삭제 -->
+				            <button type="button"
+				                    class="btn btn-sm btn-outline-danger"
+				                    title="삭제"
+				                    th:onclick="|deleteContact(${client.id}, ${c.id})|">
+				                    삭제
+				            </button>
+				
+				        </div>
+				    </td>
+				</tr>
+				</tbody>
+            </table>
+
+            <div th:if="${#lists.isEmpty(contacts)}"
+                 class="text-muted text-center py-3">
+                등록된 담당자가 없습니다.
+            </div>
+        </div>
+
+    </div>
+<script>
+function deactivateClient(id) {
+    if (!confirm("비활성화 하시겠습니까?")) return;
+
+    fetch(`/api/clients/${id}/deactivate`, {
+        method: "DELETE"
+    }).then(res => {
+        if (!res.ok) {
+            alert("비활성화 실패");
+            return;
+        }
+        location.href = "/client/list";
+    });
+}
+
+function deleteContact(clientId, contactId) {
+    if (!confirm("담당자를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
+        return;
+    }
+
+    fetch(`/client/${clientId}/contacts/${contactId}/delete`, {
+        method: "POST"
+    }).then(res => {
+        if (!res.ok) {
+            alert("삭제 실패");
+            return;
+        }
+        location.href = `/client/detail/${clientId}?tab=contacts`;
+    });
+}
+</script>
+</section>
+</body>
+</html>

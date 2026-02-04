@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+    <h2 class="fw-bold mb-4">거래처 목록</h2>
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="/client/create" class="btn btn-primary">거래처 등록</a>
+    </div>
+
+    <table class="table table-hover table-bordered align-middle">
+        <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>거래처명</th>
+            <th>유형</th>
+            <th>사업자번호</th>
+            <th>활성 상태</th>
+            <th style="width:150px;">액션</th>
+        </tr>
+        </thead>
+        <tbody id="clientTableBody">
+        <!-- JS 렌더링 -->
+        </tbody>
+    </table>
+
+    <!-- 페이징 -->
+    <nav>
+        <ul class="pagination justify-content-center" id="pagination">
+            <!-- JS 렌더링 -->
+        </ul>
+    </nav>
+
+<script>
+let currentPage = 0;
+const size = 10;
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadClients(0);
+});
+
+function loadClients(page) {
+    fetch(`/api/clients?page=${page}&size=${size}`)
+        .then(res => res.json())
+        .then(result => {
+            if (!result.success) {
+                alert("거래처 조회 실패");
+                return;
+            }
+
+            renderTable(result.data.content);
+            renderPagination(result.data, page);
+            currentPage = page;
+        });
+}
+
+function renderTable(clients) {
+    const tbody = document.getElementById("clientTableBody");
+    tbody.innerHTML = "";
+
+    clients.forEach(c => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.name}</td>
+            <td>${c.type}</td>
+            <td>${c.bizNo ?? ""}</td>
+            <td>${c.active ? "활성" : "비활성"}</td>
+            <td>
+                <a href="/client/detail/${c.id}"
+                   class="btn btn-sm btn-secondary">
+                    보기
+                </a>
+            </td>
+        `;
+
+        if (!c.active) {
+            tr.classList.add("table-secondary");
+        }
+
+        tbody.appendChild(tr);
+    });
+}
+
+function renderPagination(pageData, page) {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    // 이전
+    pagination.appendChild(createPageItem(
+        "이전",
+        page - 1,
+        page === 0
+    ));
+
+    // 페이지 번호
+    for (let i = 0; i < pageData.totalPages; i++) {
+        pagination.appendChild(createPageItem(
+            i + 1,
+            i,
+            false,
+            i === page
+        ));
+    }
+
+    // 다음
+    pagination.appendChild(createPageItem(
+        "다음",
+        page + 1,
+        page === pageData.totalPages - 1
+    ));
+}
+
+function createPageItem(label, page, disabled, active = false) {
+    const li = document.createElement("li");
+    li.className = "page-item";
+    if (disabled) li.classList.add("disabled");
+    if (active) li.classList.add("active");
+
+    const a = document.createElement("a");
+    a.className = "page-link";
+    a.href = "#";
+    a.textContent = label;
+
+    if (!disabled) {
+        a.onclick = e => {
+            e.preventDefault();
+            loadClients(page);
+        };
+    }
+
+    li.appendChild(a);
+    return li;
+}
+</script>
+
+</section>
+</body>
+</html>

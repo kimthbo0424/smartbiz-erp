@@ -1,0 +1,100 @@
+= SmartBiz ERP Inventory Module REST API Documentation
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: highlightjs
+:snippets: build/generated-snippets
+
+== Inventory API
+
+=== 1. 재고 현황 조회
+include::{snippets}/inventory-get/http-request.adoc[]
+include::{snippets}/inventory-get/http-response.adoc[]
+
+=== 2. 재고 현황 조회 (content 상세)
+include::{snippets}/inventory-get-content-detail/http-request.adoc[]
+include::{snippets}/inventory-get-content-detail/http-response.adoc[]
+
+=== 3. 재고 입고
+include::{snippets}/inventory-in/http-request.adoc[]
+include::{snippets}/inventory-in/http-response.adoc[]
+
+=== 4. 재고 출고
+include::{snippets}/inventory-out/http-request.adoc[]
+include::{snippets}/inventory-out/http-response.adoc[]
+
+=== 5. 재고 이동
+include::{snippets}/inventory-move/http-request.adoc[]
+include::{snippets}/inventory-move/http-response.adoc[]
+
+=== 6. 재고 조정
+include::{snippets}/inventory-adjust/http-request.adoc[]
+include::{snippets}/inventory-adjust/http-response.adoc[]
+
+=== 7. 재고 취소
+include::{snippets}/inventory-cancel/http-request.adoc[]
+include::{snippets}/inventory-cancel/http-response.adoc[]
+
+=== 8. 재고 취소 가능 여부
+include::{snippets}/inventory-cancel-check/http-request.adoc[]
+include::{snippets}/inventory-cancel-check/http-response.adoc[]
+
+== Error Response Policy
+
+SmartBiz ERP의 모든 REST API는 오류 발생 시 아래의 **공통 응답 형식**을 따른다.
+
+[source,json]
+----
+{
+  "success": false,
+  "data": null,
+  "message": "에러 메시지"
+}
+----
+
+* `success` : 요청 성공 여부 (항상 false)
+* `data` : 오류 응답에서는 항상 null
+* `message` : 오류 원인에 대한 설명 메시지
+
+=== HTTP Status Codes
+
+|===
+| Status | Name | 설명
+
+| 400 | Bad Request | 요청 파라미터 오류 또는 유효성 검증 실패
+| 404 | Not Found | 요청한 리소스를 찾을 수 없음
+| 409 | Conflict | 비즈니스 로직 충돌
+| 500 | Internal Server Error | 서버 내부 오류
+|===
+
+=== Error Examples
+
+==== 400 Bad Request
+[source,json]
+----
+{
+  "success": false,
+  "data": null,
+  "message": "수량은 1 이상이어야 합니다."
+}
+----
+
+==== 404 Not Found
+[source,json]
+----
+{
+  "success": false,
+  "data": null,
+  "message": "재고를 찾을 수 없습니다."
+}
+----
+
+==== 409 Conflict
+[source,json]
+----
+{
+  "success": false,
+  "data": null,
+  "message": "재고 부족"
+}
+----

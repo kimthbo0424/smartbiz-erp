@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="fw-bold me-auto">급여 산정</h2>
+    <a th:href="@{/payroll/form}" class="btn btn-primary btn-sm">급여 산정 등록</a>
+  </div>
+
+  <div class="card p-3 shadow-sm mb-3">
+	<form class="row g-2 align-items-center" method="get" th:action="@{/payroll}">
+
+	  <!-- 1 이름 사번 선택 -->
+	  <div class="col-auto">
+	    <select class="form-select form-select-sm" name="searchField">
+	      <option value="name"
+	              th:selected="${param.searchField == null or param.searchField[0] == '' or param.searchField[0] == 'name'}">
+	        이름
+	      </option>
+	      <option value="id"
+	              th:selected="${param.searchField != null and param.searchField[0] == 'id'}">
+	        사번
+	      </option>
+	    </select>
+	  </div>
+
+	  <!-- 검색어 -->
+	  <div class="col-auto">
+	    <input type="text" class="form-control form-control-sm"
+	           name="keyword" th:value="${param.keyword}"
+	           placeholder="검색어 입력">
+	  </div>
+
+	  <!-- 2 연도 월 달력 -->
+	  <div class="col-auto">
+	    <input type="month"
+	           class="form-control form-control-sm"
+	           name="yearMonth"
+	           th:value="${param.yearMonth}">
+	  </div>
+
+	  <!-- 3 상태는 그대로 -->
+	  <div class="col-auto">
+	    <select class="form-select form-select-sm" name="status">
+	      <option value="" th:selected="${param.status == null or param.status[0] == ''}">상태 전체</option>
+	      <option value="CALCULATED" th:selected="${param.status != null and param.status[0] == 'CALCULATED'}">계산완료</option>
+	      <option value="CONFIRMED" th:selected="${param.status != null and param.status[0] == 'CONFIRMED'}">확정</option>
+	      <option value="UNCALC" th:selected="${param.status != null and param.status[0] == 'UNCALC'}">미계산</option>
+	    </select>
+	  </div>
+
+	  <div class="col-auto">
+	    <button class="btn btn-outline-primary btn-sm" type="submit">조회</button>
+	  </div>
+	</form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle bg-white mb-0">
+		<thead class="table-light">
+		<tr>
+		  <th style="width:90px;">직원ID</th>
+		  <th>이름</th>
+		  <th>지급연월</th>
+		  <th class="text-end">기본급</th>
+		  <th class="text-end">수당</th>
+		  <th class="text-end">공제</th>
+		  <th class="text-end">실지급액</th>
+		  <th>상태</th>
+		  <th style="width:180px;">작업</th>
+		</tr>
+		</thead>
+
+		<tbody>
+		<tr th:each="p : ${payrolls}">
+		  <td th:text="${p.employeeId}">1</td>
+		  <td th:text="${p.employeeName}">직원명</td>
+
+		  <td th:text="${p.year + '-' + #numbers.formatInteger(p.month,2)}">2025-11</td>
+
+		  <td class="text-end"
+		      th:text="${#numbers.formatDecimal(p.baseSalary, 0, 'COMMA', 0, 'POINT')}">0</td>
+		  <td class="text-end"
+		      th:text="${#numbers.formatDecimal(p.totalAllowance, 0, 'COMMA', 0, 'POINT')}">0</td>
+		  <td class="text-end"
+		      th:text="${#numbers.formatDecimal(p.totalDeduction, 0, 'COMMA', 0, 'POINT')}">0</td>
+		  <td class="text-end fw-bold"
+		      th:text="${#numbers.formatDecimal(p.netPay, 0, 'COMMA', 0, 'POINT')}">0</td>
+
+		  <td>
+		    <span th:if="${p.status == 'CALCULATED'}" class="badge bg-warning text-dark">계산완료</span>
+		    <span th:if="${p.status == 'CONFIRMED'}" class="badge bg-success">확정</span>
+		    <span th:if="${p.status == 'UNCALC'}" class="badge bg-secondary">미계산</span>
+		  </td>
+
+		  <td>
+		    <form th:action="@{/payroll/confirm}" method="post" class="d-inline">
+		      <input type="hidden" name="id" th:value="${p.payrollId}">
+		      <button type="submit" class="btn btn-sm btn-outline-success me-1"
+		              th:disabled="${p.status != 'CALCULATED'}">
+		        확정
+		      </button>
+		    </form>
+
+		    <!-- 확정이면 명세서, 아니면 수정 -->
+		    <a th:if="${p.status == 'CONFIRMED'}"
+		       class="btn btn-sm btn-outline-primary"
+		       th:href="@{/payroll/payslip/{id}(id=${p.payrollId})}">
+		      명세서
+		    </a>
+
+			<a th:if="${p.status != 'CONFIRMED'}"
+			   class="btn btn-sm btn-outline-secondary"
+			   th:href="@{/payroll/payslip/{id}(id=${p.payrollId}, edit='Y')}">
+			  수정
+			</a>
+		  </td>
+		</tr>
+
+		<tr th:if="${#lists.isEmpty(payrolls)}">
+		  <td colspan="9" class="text-center text-muted py-4">조회 결과가 없습니다</td>
+		</tr>
+		</tbody>
+
+    </table>
+  </div>
+</section>
+</body>
+</html>

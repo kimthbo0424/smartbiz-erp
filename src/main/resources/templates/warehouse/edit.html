@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+    <h2 class="fw-bold mb-4">창고 수정</h2>
+
+    <div class="bg-white p-4 rounded shadow-sm">
+
+        <div class="mb-3">
+            <label class="form-label">창고명</label>
+            <input type="text" id="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">창고 코드</label>
+            <input type="text" id="code" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">위치</label>
+            <input type="text" id="location" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">담당자</label>
+            <input type="text" id="manager" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">수용량</label>
+            <input type="number" id="capacity" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">운영 여부</label>
+            <select id="isActive" class="form-select">
+                <option value="true">운영 중</option>
+                <option value="false">비활성</option>
+            </select>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" onclick="save()">저장</button>
+            <a th:href="@{/warehouse/list}" class="btn btn-outline-secondary">취소</a>
+        </div>
+    </div>
+
+<script>
+    const id = location.pathname.split("/").pop();
+
+    document.addEventListener("DOMContentLoaded", load);
+
+    function load() {
+        fetch(`/api/warehouse/${id}`)
+            .then(res => res.json())
+            .then(res => {
+                const w = res.data;
+
+                document.getElementById("name").value = w.name;
+                document.getElementById("code").value = w.code ?? "";
+                document.getElementById("location").value = w.location ?? "";
+                document.getElementById("manager").value = w.manager ?? "";
+                document.getElementById("capacity").value = w.capacity ?? "";
+                document.getElementById("isActive").value = String(w.isActive);
+            });
+    }
+
+    function save() {
+        const data = {
+            name: document.getElementById("name").value,
+            code: document.getElementById("code").value,
+            location: document.getElementById("location").value,
+            manager: document.getElementById("manager").value,
+            capacity: document.getElementById("capacity").value,
+            isActive: document.getElementById("isActive").value === "true"
+        };
+
+        fetch(`/api/warehouse/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(() => location.href = `/warehouse/detail/${id}`);
+    }
+</script>
+
+</section>
+</body>
+</html>

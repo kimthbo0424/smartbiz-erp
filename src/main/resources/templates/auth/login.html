@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인 - SmartBiz ERP</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.min.css}">
+</head>
+<body style="background:#f8f9fa;">
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
+    <div class="card shadow-sm border-0" style="width:100%; max-width:420px;">
+        <div class="card-body p-4">
+
+            <h4 class="fw-bold text-center mb-1">SmartBiz ERP</h4>
+            <p class="text-center text-muted mb-4" style="font-size:0.9rem;">
+                시스템 접속을 위해 로그인해 주세요.
+            </p>
+
+            <!-- 에러 메시지 -->
+            <div th:if="${param.error}" class="alert alert-danger py-2 mb-3" style="font-size:0.9rem;">
+                아이디 또는 비밀번호가 올바르지 않습니다.
+            </div>
+
+            <!-- 로그아웃 메시지 -->
+            <div th:if="${param.logout}" class="alert alert-success py-2 mb-3" style="font-size:0.9rem;">
+                로그아웃 되었습니다.
+            </div>
+
+            <form method="post" th:action="@{/login}">
+                <div class="mb-3">
+                    <label class="form-label mb-1">아이디</label>
+                    <input type="text"
+                           class="form-control form-control-sm"
+                           name="username"
+                           autocomplete="username"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label mb-1">비밀번호</label>
+                    <input type="password"
+                           class="form-control form-control-sm"
+                           name="password"
+                           autocomplete="current-password"
+                           required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-1">
+                    로그인
+                </button>
+            </form>
+
+            <div class="text-center text-muted mt-3" style="font-size:0.8rem;">
+                SmartBiz ERP 2025
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

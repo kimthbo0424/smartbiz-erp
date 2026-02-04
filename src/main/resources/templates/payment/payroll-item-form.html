@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+  <div class="d-flex align-items-center mb-3">
+    <a th:href="@{/payroll-items}" class="btn btn-outline-secondary btn-sm me-2">목록으로</a>
+    <h2 class="fw-bold mb-0"
+        th:text="${item != null and item.itemId != null} ? '급여 항목 수정' : '급여 항목 추가'">
+      급여 항목 추가
+    </h2>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-4" style="max-width: 720px;">
+
+      <form th:action="@{/payroll-items/save}" method="post" th:object="${item}">
+
+        <input type="hidden" th:field="*{itemId}">
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label mb-1">코드</label>
+            <input type="text" class="form-control" th:field="*{itemCode}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label mb-1">명칭</label>
+            <input type="text" class="form-control" th:field="*{itemName}" required>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label mb-1">유형</label>
+            <select class="form-select" th:field="*{itemType}" required>
+              <option th:each="t : ${itemTypes}" th:value="${t}" th:text="${t}"></option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label mb-1">계산방식</label>
+            <select class="form-select" th:field="*{calcType}" required>
+              <option th:each="c : ${calcTypes}" th:value="${c}" th:text="${c}"></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label mb-1">고정금액</label>
+            <input type="number" step="0.01" class="form-control"
+                   th:field="*{amount}"
+                   placeholder="FIXED 일 때 입력">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label mb-1">비율</label>
+            <input type="number" step="0.0001" class="form-control"
+                   th:field="*{rate}"
+                   placeholder="RATE 일 때 입력 예 0.0330">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label mb-1">사용 여부</label>
+          <select class="form-select" th:field="*{useYn}">
+            <option value="Y">Y</option>
+            <option value="N">N</option>
+          </select>
+        </div>
+
+        <div class="alert alert-light border small mb-4">
+          고정금액은 amount만 입력하고 비율은 비워둡니다
+          비율은 rate만 입력하고 고정금액은 비워둡니다
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">저장</button>
+          <a th:href="@{/payroll-items}" class="btn btn-outline-secondary">취소</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</section>
+</body>
+</html>

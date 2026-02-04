@@ -1,0 +1,98 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+}
+
+group = 'com.smartbiz'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    snippetsDir = file("build/generated-snippets")
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.session:spring-session-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    testRuntimeOnly 'com.h2database:h2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}
+
+tasks.named('test', Test) {
+
+    useJUnitPlatform()
+
+    // 테스트 클래스 위치 강제
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    // ⭐ 테스트 탐색 패턴 강제
+    include '**/*Test.class'
+
+    outputs.dir snippetsDir
+
+    // 안정화 옵션
+    systemProperty "spring.devtools.restart.enabled", "false"
+    systemProperty "file.encoding", "UTF-8"
+}
+
+asciidoctor {
+    dependsOn test
+    inputs.dir snippetsDir
+
+    attributes(
+        'snippets': snippetsDir
+    )
+
+    sources {
+        include 'index.adoc'
+    }
+
+    baseDirFollowsSourceFile()
+}
+
+tasks.register('copyRestDocs', Copy) {
+    dependsOn asciidoctor
+    from(asciidoctor.outputDir)
+    into("src/main/resources/static/docs")
+}
+
+build {
+    dependsOn copyRestDocs
+}

@@ -1,0 +1,185 @@
+<!-- /ERP/src/main/resources/templates/orders/order_detail.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<section>
+
+  <style>
+    .form-section{
+      background:#fff;
+      padding:20px;
+      border-radius:5px;
+      box-shadow:0 0 5px rgba(0,0,0,0.1);
+      margin-bottom:20px;
+    }
+    .kv { margin: 0; }
+    .kv dt { float:left; width:120px; color:#6c757d; font-weight:600; }
+    .kv dd { margin-left:130px; margin-bottom:.5rem; }
+  </style>
+
+  <!-- 상단 타이틀 + 액션 -->
+  <div class="d-flex align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">주문 상세</h2>
+      <div class="text-muted small">
+        주문번호: <span class="fw-semibold" th:text="${order.orderNo}">ORD-20251112-001</span>
+      </div>
+    </div>
+
+    <div class="ms-auto d-flex gap-2 align-items-center">
+      <!-- 상태 배지 -->
+      <span class="badge"
+            th:classappend="
+              ${order.status} == 'PENDING' ? ' bg-warning text-dark' :
+              (${order.status} == 'SHIPPED' ? ' bg-success' :
+              (${order.status} == 'SETTLED' ? ' bg-secondary' :
+              (${order.status} == 'CANCELLED' ? ' bg-danger' :
+              (${order.status} == 'RETURNED' ? ' bg-danger' : ' bg-light text-dark'))))"
+            th:text="
+              ${order.status} == 'PENDING' ? '진행중' :
+              (${order.status} == 'SHIPPED' ? '출고완료' :
+              (${order.status} == 'SETTLED' ? '정산완료' :
+              (${order.status} == 'CANCELLED' ? '취소' :
+              (${order.status} == 'RETURNED' ? '반품' : order.status))))">
+        진행중
+      </span>
+
+      <a th:href="@{/orders}" class="btn btn-outline-secondary">목록</a>
+
+      <a th:href="@{/orders/{id}/edit(id=${order.id})}"
+         class="btn btn-outline-primary"
+         th:if="${order.status == 'PENDING'}">수정</a>
+
+      <!-- 출고/취소/반품 액션(POST) -->
+      <form th:action="@{/orders/{id}/ship(id=${order.id})}" method="post" class="d-inline"
+            th:if="${order.status == 'PENDING'}">
+        <button type="submit" class="btn btn-outline-success">출고</button>
+      </form>
+
+      <form th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" class="d-inline"
+            th:if="${order.status == 'PENDING'}">
+        <button type="submit" class="btn btn-outline-danger">취소</button>
+      </form>
+
+      <form th:action="@{/orders/{id}/return(id=${order.id})}" method="post" class="d-inline"
+            th:if="${order.status == 'SHIPPED'}">
+        <button type="submit" class="btn btn-outline-danger">반품</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 기본 정보 -->
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="form-section">
+        <h5 class="fw-bold mb-3">거래처 / 담당자</h5>
+        <dl class="kv">
+          <dt>거래처명</dt>
+          <dd th:text="${order.partnerName}">홍길동상사</dd>
+
+          <dt>담당자명</dt>
+          <dd th:text="${order.managerName}">김철수</dd>
+
+          <dt>연락처</dt>
+          <dd th:text="${order.managerPhone}">010-1234-5678</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="form-section">
+        <h5 class="fw-bold mb-3">주문 정보</h5>
+        <dl class="kv">
+          <dt>주문일</dt>
+          <dd th:text="${order.orderDate}">2025-11-10</dd>
+
+          <dt>상태</dt>
+          <dd>
+            <span class="badge"
+                  th:classappend="
+                    ${order.status} == 'PENDING' ? ' bg-warning text-dark' :
+                    (${order.status} == 'SHIPPED' ? ' bg-success' :
+                    (${order.status} == 'SETTLED' ? ' bg-secondary' :
+                    (${order.status} == 'CANCELLED' ? ' bg-danger' :
+                    (${order.status} == 'RETURNED' ? ' bg-danger' : ' bg-light text-dark'))))"
+                  th:text="
+                    ${order.status} == 'PENDING' ? '진행중' :
+                    (${order.status} == 'SHIPPED' ? '출고완료' :
+                    (${order.status} == 'SETTLED' ? '정산완료' :
+                    (${order.status} == 'CANCELLED' ? '취소' :
+                    (${order.status} == 'RETURNED' ? '반품' : order.status))))">
+              진행중
+            </span>
+          </dd>
+
+          <dt>주문번호</dt>
+          <dd th:text="${order.orderNo}">ORD-20251112-001</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주문 상품 내역 -->
+  <div class="form-section">
+    <h5 class="fw-bold mb-3">주문 상품 내역</h5>
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th>상품명</th>
+          <th style="width:140px;">수량</th>
+          <th style="width:160px;">단가</th>
+          <th style="width:180px;">금액</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:if="${#lists.isEmpty(order.items)}">
+          <td colspan="5" class="text-center text-muted py-4">상품 내역이 없습니다.</td>
+        </tr>
+
+        <tr th:each="it, stat : ${order.items}">
+          <td th:text="${stat.count}">1</td>
+          <td th:text="${it.productName}">노트북</td>
+          <td th:text="${it.qty}">2</td>
+          <td th:text="'₩' + ${#numbers.formatInteger(it.unitPrice, 3, 'COMMA')}">₩1,500,000</td>
+          <td th:text="'₩' + ${#numbers.formatInteger(it.amount, 3, 'COMMA')}">₩3,000,000</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 결제 금액 -->
+  <div class="form-section">
+    <h5 class="fw-bold mb-3">결제 금액</h5>
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">금액 (공급가액)</label>
+        <input type="text" class="form-control"
+               th:value="'₩' + ${#numbers.formatInteger(order.subtotal, 3, 'COMMA')}" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">세금 (VAT 10%)</label>
+        <input type="text" class="form-control"
+               th:value="'₩' + ${#numbers.formatInteger(order.tax, 3, 'COMMA')}" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">할인</label>
+        <input type="text" class="form-control"
+               th:value="'₩' + ${#numbers.formatInteger(order.discount, 3, 'COMMA')}" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">총액</label>
+        <input type="text" class="form-control fw-semibold"
+               th:value="'₩' + ${#numbers.formatInteger(order.total, 3, 'COMMA')}" readonly>
+      </div>
+    </div>
+  </div>
+
+</section>
+</html>

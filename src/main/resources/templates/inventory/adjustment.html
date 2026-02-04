@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+
+<body>
+<section>
+  <h2 class="fw-bold mb-4">재고 조정 내역</h2>
+
+  <!-- 검색 / 정렬 -->
+  <form class="row g-2 mb-3" onsubmit="return false;">
+    <div class="col-md-3">
+      <input type="text" id="keyword"
+             class="form-control form-control-sm"
+             placeholder="상품명 검색">
+    </div>
+
+    <div class="col-md-3">
+      <select id="warehouseSelect" class="form-select form-select-sm"
+              onchange="resetAndLoad()">
+        <option value="">창고 선택</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <select id="sortSelect"
+              class="form-select form-select-sm"
+              onchange="resetAndLoad()">
+        <option value="occurredAt,desc">최신순</option>
+        <option value="occurredAt,asc">오래된순</option>
+        <option value="productId,asc">상품 ID ↑</option>
+        <option value="productId,desc">상품 ID ↓</option>
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+      <button type="button"
+              class="btn btn-sm btn-primary"
+              onclick="resetAndLoad()">
+        검색
+      </button>
+      <a href="/inventory/adjustment/form"
+         class="btn btn-sm btn-outline-secondary">
+        재고 조정 등록
+      </a>
+    </div>
+  </form>
+
+  <!-- 테이블 -->
+  <div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+      <tr>
+        <th style="width:160px;">날짜</th>
+        <th style="width:160px;">상품명</th>
+        <th style="width:100px;">변경수량</th>
+        <th style="width:240px;">사유</th>
+        <th style="width:140px;">창고</th>
+      </tr>
+      </thead>
+      <tbody id="adjustmentBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 페이지 -->
+  <nav class="mt-3">
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+
+  <style>
+    .reason-cell {
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+
+  <script>
+  let currentPage = 0;
+  const pageSize = 10;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadWarehouses();
+    loadAdjustments();
+  });
+
+  function resetAndLoad() {
+    currentPage = 0;
+    loadAdjustments();
+  }
+
+  async function loadWarehouses() {
+    const res = await fetch("/api/warehouse");
+    const result = await res.json();
+
+    if (!result.success) {
+      alert("창고 목록 조회 실패");
+      return;
+    }
+
+    const select = document.getElementById("warehouseSelect");
+    select.innerHTML = `<option value="">창고 선택</option>`;
+
+    result.data.forEach(w => {
+      select.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${w.id}">${w.name}</option>`
+      );
+    });
+  }
+
+  async function loadAdjustments() {
+    const warehouseId = document.getElementById("warehouseSelect").value;
+    const keyword = document.getElementById("keyword").value.trim();
+    const sort = document.getElementById("sortSelect").value;
+
+    if (!warehouseId) {
+      alert("창고를 선택하세요.");
+      return;
+    }
+
+    const res = await fetch(
+      `/api/inventory/moves/adjust?warehouseId=${warehouseId}&page=${currentPage}&size=${pageSize}&sort=${sort}`
+    );
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert("조정 내역 조회 실패");
+      return;
+    }
+
+    const pageObj = result.data;
+    renderAdjustments(pageObj.content, keyword);
+    renderPagination(pageObj.totalPages);
+  }
+
+  function renderAdjustments(list, keyword) {
+    const tbody = document.getElementById("adjustmentBody");
+    tbody.innerHTML = "";
+
+    const filtered = list.filter(x =>
+      !keyword || (x.productName ?? "").includes(keyword)
+    );
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-muted">
+            조회된 조정 내역이 없습니다.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    filtered.forEach(x => {
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${x.occurredAt.replace("T"," ")}</td>
+          <td>${x.productName ?? "-"}</td>
+          <td class="${x.quantity > 0 ? 'text-success' : 'text-danger'} text-center">
+            ${x.quantity > 0 ? '+' : ''}${x.quantity}
+          </td>
+          <td class="reason-cell" title="${x.reason ?? ''}">
+            ${x.reason ?? '-'}
+          </td>
+          <td>${x.warehouseName ?? "-"}</td>
+        </tr>
+      `);
+    });
+  }
+
+  function renderPagination(totalPages) {
+    const ul = document.getElementById("pagination");
+    ul.innerHTML = "";
+
+    for (let i = 0; i < totalPages; i++) {
+      ul.insertAdjacentHTML("beforeend", `
+        <li class="page-item ${i === currentPage ? 'active' : ''}">
+          <button class="page-link"
+                  onclick="goPage(${i})">${i + 1}</button>
+        </li>
+      `);
+    }
+  }
+
+  function goPage(page) {
+    currentPage = page;
+    loadAdjustments();
+  }
+</script>
+</section>
+</body>
+</html>

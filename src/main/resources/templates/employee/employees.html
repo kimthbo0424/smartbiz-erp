@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+  <!-- 제목 + 등록 버튼 -->
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="fw-bold me-auto">직원 관리</h2>
+    <a th:if="${session.auth != null and session.auth <= 2}" th:href="@{/employee/form}" class="btn btn-primary btn-sm">직원 등록</a>
+  </div>
+
+  <!-- 목록 카드 -->
+  <div class="card p-3 shadow-sm">
+
+    <!-- 검색 영역 -->
+    <form th:action="@{/employees}" method="get"
+          class="row g-2 align-items-center mb-3">
+      <div class="col-auto">
+        <select class="form-select form-select-sm" name="searchField">
+          <option value="id"    th:selected="${searchField} == 'id'">ID</option>
+          <option value="name"  th:selected="${searchField} == 'name'">이름</option>
+          <option value="dept"  th:selected="${searchField} == 'dept'">부서</option>
+          <option value="rank"  th:selected="${searchField} == 'rank'">직급</option>
+          <option value="status" th:selected="${searchField} == 'status'">상태</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <input type="text"
+               name="keyword"
+               class="form-control form-control-sm"
+               placeholder="검색어 입력"
+               th:value="${keyword}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          검색
+        </button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+          <th style="width:10%;">ID</th>
+          <th style="width:15%;">이름</th>
+          <th style="width:20%;">부서</th>
+          <th style="width:10%;">직급</th>
+          <th style="width:10%;">직책</th>
+          <th style="width:15%;">입사일</th>
+          <th style="width:10%;">상태</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 직원 목록 루프 -->
+        <tr th:each="emp : ${employees}">
+          <td th:text="${emp.employeeId}">1</td>
+
+          <!-- 이름 클릭 시 상세 -->
+          <td>
+            <a th:href="@{/employee/detail/{id}(id=${emp.employeeId})}"
+               class="text-decoration-none"
+               th:text="${emp.name}">홍길동</a>
+          </td>
+
+          <td th:text="${emp.deptName}">본부</td>
+          <td th:text="${emp.rankName}">사원</td>
+          <td th:text="${emp.titleName != null && !#strings.isEmpty(emp.titleName) ? emp.titleName : '없음'}">
+            직책
+          </td>
+          <td th:text="${#temporals.format(emp.hireDate, 'yyyy-MM-dd')}">2025-11-24</td>
+          <td th:text="${emp.status}">재직</td>
+        </tr>
+
+        <!-- 직원이 없을 때 -->
+        <tr th:if="${#lists.isEmpty(employees)}">
+          <td colspan="7" class="text-center text-muted py-3">
+            등록된 직원이 없습니다.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+	  
+	  <!-- 페이징 -->
+	        <nav class="mt-3">
+	          <ul class="pagination pagination-sm justify-content-center mb-0"
+	              th:with="
+	                tp=${totalPages == null ? 1 : totalPages},
+	                cp=${currentPage == null ? 1 : currentPage},
+	                start=${(cp - 2) < 1 ? 1 : (cp - 2)},
+	                end=${(cp + 2) > tp ? tp : (cp + 2)}
+	              ">
+
+	            <!-- 이전 -->
+	            <li class="page-item" th:classappend="${cp <= 1} ? ' disabled' : ''">
+	              <a class="page-link"
+	                 th:href="@{/employees(searchField=${searchField}, keyword=${keyword}, page=${cp - 1})}">
+	                이전
+	              </a>
+	            </li>
+
+	            <!-- 첫 페이지가 범위 밖이면 1 표시 -->
+	            <li class="page-item" th:if="${start > 1}">
+	              <a class="page-link"
+	                 th:href="@{/employees(searchField=${searchField}, keyword=${keyword}, page=1)}">1</a>
+	            </li>
+
+	            <!-- 앞쪽 생략 표시 -->
+	            <li class="page-item disabled" th:if="${start > 2}">
+	              <span class="page-link">...</span>
+	            </li>
+
+	            <!-- 가운데 5개(또는 tp 범위 내) -->
+	            <li class="page-item"
+	                th:each="p : ${#numbers.sequence(start, end)}"
+	                th:classappend="${p == cp} ? ' active' : ''">
+	              <a class="page-link"
+	                 th:href="@{/employees(searchField=${searchField}, keyword=${keyword}, page=${p})}"
+	                 th:text="${p}">1</a>
+	            </li>
+
+	            <!-- 뒤쪽 생략 표시 -->
+	            <li class="page-item disabled" th:if="${end < tp - 1}">
+	              <span class="page-link">...</span>
+	            </li>
+
+	            <!-- 끝 페이지가 범위 밖이면 끝 표시 -->
+	            <li class="page-item" th:if="${end < tp}">
+	              <a class="page-link"
+	                 th:href="@{/employees(searchField=${searchField}, keyword=${keyword}, page=${tp})}"
+	                 th:text="${tp}">10</a>
+	            </li>
+
+	            <!-- 다음 -->
+	            <li class="page-item" th:classappend="${cp >= tp} ? ' disabled' : ''">
+	              <a class="page-link"
+	                 th:href="@{/employees(searchField=${searchField}, keyword=${keyword}, page=${cp + 1})}">
+	                다음
+	              </a>
+	            </li>
+
+	          </ul>
+	        </nav>
+    </div>
+  </div>
+</section>
+</body>
+</html>

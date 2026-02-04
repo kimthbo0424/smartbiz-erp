@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+
+<section>
+  <h2 class="fw-bold mb-4">재고 현황</h2>
+
+  <!-- 검색 영역 -->
+  <form class="row g-2 mb-3" onsubmit="return false;">
+    <div class="col-md-3">
+      <input type="text" id="searchKeyword"
+             class="form-control form-control-sm"
+             placeholder="상품명 검색">
+    </div>
+
+    <div class="col-md-3">
+      <select id="warehouseSelect"
+              class="form-select form-select-sm"
+              onchange="resetAndLoad()">
+        <option value="">창고 선택</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <button type="button"
+              onclick="resetAndLoad()"
+              class="btn btn-sm btn-primary">
+        검색
+      </button>
+      <a href="/inventory/inout"
+         class="btn btn-sm btn-outline-secondary">
+        입출고 내역
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <select id="sortSelect"
+              class="form-select form-select-sm"
+              onchange="resetAndLoad()">
+        <option value="productId,asc">상품ID ↑</option>
+        <option value="productId,desc">상품ID ↓</option>
+      </select>
+    </div>
+  </form>
+
+  <!-- 테이블 -->
+  <div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+      <tr>
+        <th>창고ID</th>
+        <th>상품ID</th>
+        <th>상품명</th>
+        <th class="text-center">수량</th>
+        <th class="text-center">안전재고</th>
+        <th class="text-center">상태</th>
+      </tr>
+      </thead>
+      <tbody id="inventoryBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 페이지 -->
+  <nav class="mt-3">
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+
+<style>
+  .safety-input {
+    max-width: 90px;
+    margin: 0 auto;
+    text-align: center;
+  }
+</style>
+
+<script>
+  let currentPage = 0;
+  const pageSize = 10;
+
+  /* ======================
+     창고 목록 로드
+     ====================== */
+  async function loadWarehouses() {
+    try {
+      const res = await fetch("/api/warehouse");
+      const result = await res.json();
+
+      if (!result.success) {
+        alert(result.message || "창고 목록 조회 실패");
+        return;
+      }
+
+      const select = document.getElementById("warehouseSelect");
+      select.innerHTML = `<option value="">창고 선택</option>`;
+
+      result.data.forEach(w => {
+        select.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${w.id}">${w.name}</option>`
+        );
+      });
+    } catch (e) {
+      console.error(e);
+      alert("창고 목록을 불러오지 못했습니다.");
+    }
+  }
+
+  function resetAndLoad() {
+    currentPage = 0;
+    loadInventory();
+  }
+
+  /* ======================
+     재고 조회
+     ====================== */
+  async function loadInventory() {
+    const warehouseId = document.getElementById("warehouseSelect").value;
+    const keyword = document.getElementById("searchKeyword").value.trim();
+    const sort = document.getElementById("sortSelect").value;
+
+    if (!warehouseId) return;
+
+    const res = await fetch(
+      `/api/inventory?warehouseId=${warehouseId}&page=${currentPage}&size=${pageSize}&sort=${sort}`
+    );
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(result.message || "재고 조회 실패");
+      return;
+    }
+
+    const pageObj = result.data;
+    renderInventory(pageObj.content, keyword);
+    renderPagination(pageObj.totalPages);
+  }
+
+  /* ======================
+     테이블 렌더링
+     ====================== */
+  function renderInventory(list, keyword) {
+    const tbody = document.getElementById("inventoryBody");
+    tbody.innerHTML = "";
+
+    const filtered = list.filter(i =>
+      !keyword || (i.productName && i.productName.includes(keyword))
+    );
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center text-muted">
+            조회된 재고가 없습니다.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    filtered.forEach(i => {
+      const isLack = i.quantity <= i.safetyStockQty;
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${i.warehouseId}</td>
+          <td>${i.productId}</td>
+          <td>${i.productName ?? '-'}</td>
+          <td class="text-center">${i.quantity}</td>
+
+          <td class="text-center">
+            <input type="number"
+                   class="form-control form-control-sm safety-input"
+                   min="0"
+                   value="${i.safetyStockQty}"
+                   onchange="updateSafetyStock(
+                     ${i.warehouseId},
+                     ${i.productId},
+                     this.value
+                   )">
+          </td>
+
+          <td class="text-center">
+            ${
+              isLack
+                ? `<span class="badge bg-danger">부족</span>`
+                : `<span class="badge bg-success">정상</span>`
+            }
+          </td>
+        </tr>
+      `);
+    });
+  }
+
+  /* ======================
+     페이지네이션
+     ====================== */
+  function renderPagination(totalPages) {
+    const ul = document.getElementById("pagination");
+    ul.innerHTML = "";
+
+    for (let i = 0; i < totalPages; i++) {
+      ul.insertAdjacentHTML("beforeend", `
+        <li class="page-item ${i === currentPage ? 'active' : ''}">
+          <button class="page-link"
+                  onclick="goPage(${i})">${i + 1}</button>
+        </li>
+      `);
+    }
+  }
+
+  function goPage(page) {
+    currentPage = page;
+    loadInventory();
+  }
+
+  /* ======================
+     안전재고 수정
+     ====================== */
+  async function updateSafetyStock(warehouseId, productId, qty) {
+    const res = await fetch(
+      `/api/inventory/safety-stock?warehouseId=${warehouseId}&productId=${productId}&safetyStockQty=${qty}`,
+      { method: "PATCH" }
+    );
+
+    if (!res.ok) {
+      alert("안전재고 수정 실패");
+      return;
+    }
+
+    loadInventory();
+  }
+
+  document.addEventListener("DOMContentLoaded", loadWarehouses);
+</script>
+</section>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+<h2 class="fw-bold mb-4">공급사 상세 정보</h2>
+
+<div class="card shadow-sm p-4">
+
+    <!-- 🔹 서버에서 내려준 supplierId -->
+    <input type="hidden" id="supplierId" th:value="${supplierId}">
+    <input type="hidden" id="productId">
+
+    <div class="mb-3">
+        <strong>공급사(거래처)</strong>
+        <div class="form-control-plaintext" id="supplierName"></div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">공급사 SKU</label>
+        <input type="text" id="supplierSku" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">리드타임 (일)</label>
+        <input type="number" id="leadTime" class="form-control">
+    </div>
+
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="isPrimary">
+        <label class="form-check-label">대표 공급사</label>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-secondary" onclick="goList()">목록으로</button>
+        <div>
+            <button class="btn btn-danger me-2" onclick="deleteSupplier()">삭제</button>
+            <button class="btn btn-primary" onclick="save()">저장</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const supplierId = document.getElementById("supplierId").value;
+
+document.addEventListener("DOMContentLoaded", loadSupplier);
+
+async function loadSupplier() {
+    const res = await fetch(`/api/product-suppliers/${supplierId}`);
+    const result = await res.json();
+
+    if (!result.success) {
+        alert("공급사 정보를 불러오지 못했습니다.");
+        return;
+    }
+
+    const s = result.data;
+
+    document.getElementById("supplierName").innerText = s.supplierName;
+    document.getElementById("supplierSku").value = s.supplierSku ?? "";
+    document.getElementById("leadTime").value = s.leadTime ?? "";
+    document.getElementById("isPrimary").checked = s.isPrimary === true;
+
+    // 목록 복귀용
+    document.getElementById("productId").value = s.productId;
+}
+
+async function save() {
+    const body = {
+        supplierSku: document.getElementById("supplierSku").value || null,
+        leadTime: document.getElementById("leadTime").value
+                  ? Number(document.getElementById("leadTime").value)
+                  : null,
+        isPrimary: document.getElementById("isPrimary").checked
+    };
+
+    const res = await fetch(`/api/product-suppliers/${supplierId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+        alert("저장되었습니다.");
+        goList();
+    } else {
+        alert("저장 실패");
+    }
+}
+
+async function deleteSupplier() {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+
+    const res = await fetch(`/api/product-suppliers/${supplierId}`, {
+        method: "DELETE"
+    });
+
+    if (res.status === 204) {
+        alert("삭제되었습니다.");
+        goList();
+    } else {
+        alert("삭제 실패");
+    }
+}
+
+function goList() {
+    const productId = document.getElementById("productId").value;
+    location.href = `/product-supplier/product/${productId}`;
+}
+</script>
+
+</section>
+</body>
+</html>

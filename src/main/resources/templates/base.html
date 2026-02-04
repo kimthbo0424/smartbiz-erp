@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko" th:fragment="layout(content)">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${pageTitle} ?: 'SmartBiz ERP'">SmartBiz ERP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- 로컬 Bootstrap (static 루트) -->
+  <link rel="stylesheet" th:href="@{/bootstrap.min.css}">
+  <script th:src="@{/bootstrap.min.js}"></script>
+
+  <style>
+    body { background:#f8f9fa; }
+    .sidebar { min-height:100vh; background:#fff; border-right:1px solid #dee2e6; }
+    .sidebar .accordion-button { font-size:0.95rem; padding:.6rem .75rem; }
+    .sidebar .list-group-item { border:0; padding:.45rem .75rem; font-size:0.92rem; }
+
+    /*  일반 항목만 hover 시 회색 */
+    .sidebar .list-group-item:not(.active):hover { background:#f8f9fa; }
+
+    /*  현재 페이지(active)는 hover/focus해도 파란색 유지 */
+    .sidebar .list-group-item.active:hover,
+    .sidebar .list-group-item.active:focus {
+      background: var(--bs-list-group-active-bg);
+      color: var(--bs-list-group-active-color);
+    }
+
+    /* "버튼형" 메뉴(회계/리포트) - 아코디언 화살표 제거 */
+    .sidebar .nav-button::after { display:none !important; }
+    .sidebar .nav-button { text-decoration:none; }
+
+    /* 버튼형 활성 표시(아코디언 버튼의 expanded 톤과 유사) */
+    .sidebar .nav-button.active {
+      background:#e7f1ff;
+      color:#0d6efd;
+      font-weight:600;
+    }
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+<header class="border-bottom bg-white p-2">
+  <div class="container-fluid d-flex align-items-center">
+    <a th:href="@{/dashboard}" class="navbar-brand fw-bold text-primary">SmartBiz ERP</a>
+  <div class="ms-auto d-flex align-items-center gap-2">
+	<span class="small text-muted"
+	      th:text="${session.employeeName != null ? session.employeeName : ''}">홍길동</span>
+    <form th:action="@{/checkout}" method="post" class="d-inline">
+	  <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+      <button type="submit" class="btn btn-outline-secondary btn-sm">퇴근</button>
+    </form>
+    <form th:action="@{/logout}" method="post" class="d-inline">
+	  <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+	  <button type="submit" class="btn btn-sm btn-outline-secondary">Logout</button>
+    </form>
+  </div>
+  </div>
+</header>
+
+  <!-- 사이드바 -->
+  <div class="container-fluid">
+    <div class="row">
+      <!-- 사이드바: 접힘/펼침 -->
+      <nav class="col-12 col-md-2 sidebar p-3">
+        <div class="accordion" id="sidebarAccordion">
+
+        <!-- 대시보드 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-dashboard">
+            <button class="accordion-button py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#sec-dashboard"
+                    aria-expanded="true" aria-controls="sec-dashboard">
+              대시보드
+            </button>
+          </h2>
+          <div id="sec-dashboard" class="accordion-collapse collapse"
+               aria-labelledby="hd-dashboard" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body py-2">
+              <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" th:href="@{/dashboard}">Dashboard</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 인사관리 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-hr">
+            <button class="accordion-button collapsed py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#sec-hr"
+                    aria-expanded="false" aria-controls="sec-hr">
+              인사관리
+            </button>
+          </h2>
+          <div id="sec-hr" class="accordion-collapse collapse"
+               aria-labelledby="hd-hr" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body py-2">
+              <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" th:href="@{/employees}">직원 목록</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/hr-history}">근속/인사이력</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/attendance}">근태 관리</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/attendance-stats}">근무 통계 리포트</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/departments}">부서 관리</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/positions}">직급/직책 관리</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 급여관리 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-payroll">
+            <button class="accordion-button collapsed py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#sec-payroll"
+                    aria-expanded="false" aria-controls="sec-payroll">
+              급여관리
+            </button>
+          </h2>
+          <div id="sec-payroll" class="accordion-collapse collapse"
+               aria-labelledby="hd-payroll" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body py-2">
+              <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" th:href="@{/payroll}">급여 산정</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/payroll-items}">급여 항목</a>
+              </div>
+            </div>
+          </div>
+        </div>
+          
+          <!-- 상품 관리 -->
+		<div class="accordion-item">
+		  <h2 class="accordion-header" id="hd-product">
+		    <button class="accordion-button collapsed py-2" type="button"
+		            data-bs-toggle="collapse" data-bs-target="#sec-product"
+		            aria-expanded="false" aria-controls="sec-product">
+		      상품 관리
+		    </button>
+		  </h2>
+		  <div id="sec-product" class="accordion-collapse collapse"
+		       aria-labelledby="hd-product" data-bs-parent="#sidebarAccordion">
+		
+		    <div class="accordion-body py-2">
+		      <div class="list-group list-group-flush">
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/product/list}">
+		          상품 목록
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/product/create}">
+		          상품 등록
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/category/list}">
+		          카테고리 관리
+		        </a>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+
+          
+         <!-- 재고 관리 -->
+		<div class="accordion-item">
+		  <h2 class="accordion-header" id="hd-inventory">
+		    <button class="accordion-button collapsed py-2" type="button"
+		            data-bs-toggle="collapse" data-bs-target="#sec-inventory"
+		            aria-expanded="false" aria-controls="sec-inventory">
+		      재고 관리
+		    </button>
+		  </h2>
+		  <div id="sec-inventory" class="accordion-collapse collapse"
+		       aria-labelledby="hd-inventory" data-bs-parent="#sidebarAccordion">
+		
+		    <div class="accordion-body py-2">
+		      <div class="list-group list-group-flush">
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/warehouse/list}">
+		          창고 관리
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/inventory/status}">
+		          재고 현황
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/inventory/inout}">
+		          입출고 이력
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/inventory/adjustment}">
+		          재고 조정
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/inventory/move}">
+		          재고 이동
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/inventory/report}">
+		          재고 리포트
+		        </a>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+
+
+          
+          <!-- 거래처 관리 -->
+		<div class="accordion-item">
+		  <h2 class="accordion-header" id="hd-client">
+		    <button class="accordion-button collapsed py-2" type="button"
+		            data-bs-toggle="collapse" data-bs-target="#sec-client"
+		            aria-expanded="false" aria-controls="sec-client">
+		      거래처 관리
+		    </button>
+		  </h2>
+		  <div id="sec-client" class="accordion-collapse collapse"
+		       aria-labelledby="hd-client" data-bs-parent="#sidebarAccordion">
+		
+		    <div class="accordion-body py-2">
+		      <div class="list-group list-group-flush">
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/client/list}">
+		          거래처 목록
+		        </a>
+		        <a class="list-group-item list-group-item-action"
+		           th:href="@{/client/create}">
+		          거래처 등록
+		        </a>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+        <!-- 주문관리 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-orders">
+            <button class="accordion-button collapsed py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#sec-orders"
+                    aria-expanded="false" aria-controls="sec-orders">
+              주문관리
+            </button>
+          </h2>
+          <div id="sec-orders" class="accordion-collapse collapse"
+               aria-labelledby="hd-orders" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body py-2">
+              <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" th:href="@{/orders}">주문 목록</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/orders/new}">주문 등록</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 회계관리 (버튼형) -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-accounting">
+            <a id="btn-accounting"
+               class="accordion-button collapsed nav-button py-2"
+               th:href="@{/accounting}">
+              회계관리
+            </a>
+          </h2>
+        </div>
+
+        <!-- 리포트 (버튼형) -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-reports">
+            <a id="btn-reports"
+               class="accordion-button collapsed nav-button py-2"
+               th:href="@{/reports}">
+              리포트 &amp; 분석
+            </a>
+          </h2>
+        </div>
+
+          <!-- 지원 / 로그 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="hd-support">
+            <button class="accordion-button collapsed py-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#sec-support"
+                    aria-expanded="false" aria-controls="sec-support">
+              지원 / 로그 / 시스템
+            </button>
+          </h2>
+          <div id="sec-support" class="accordion-collapse collapse"
+               aria-labelledby="hd-support" data-bs-parent="#sidebarAccordion">
+            <div class="accordion-body py-2">
+              <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action" th:href="@{/notices}">공지사항</a>
+                <a class="list-group-item list-group-item-action" th:href="@{/support}">문의/피드백</a>
+				<a class="list-group-item list-group-item-action" th:href="@{/backup/backup}">백업</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </nav>
+
+      <!-- 콘텐츠 영역 -->
+      <main class="col-12 col-md-10 p-4 flex-grow-1">
+      <th:block th:replace="${content}"></th:block>
+    </main>
+  </div>
+</div>
+
+<footer class="text-center py-3 small text-muted border-top mt-3">
+  SmartBiz ERP 2025
+</footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var path = window.location.pathname || "/";
+
+    // Bootstrap 전역 객체 없으면(혹시 모를 경우) 조용히 종료
+    if (!window.bootstrap || !bootstrap.Collapse) return;
+
+    // 기본은 "아무 아코디언도 열지 않음"
+    var targetId = null;
+
+    // HR
+    if (
+      path.indexOf("/employees") === 0 ||
+      path.indexOf("/employee") === 0 ||
+      path.indexOf("/hr-history") === 0 ||
+      path.indexOf("/attendance") === 0 ||
+      path.indexOf("/departments") === 0 ||
+      path.indexOf("/positions") === 0
+    ) {
+      targetId = "sec-hr";
+    }
+
+    // Payroll
+    if (
+      path.indexOf("/payroll") === 0 ||
+      path.indexOf("/payroll-items") === 0
+    ) {
+      targetId = "sec-payroll";
+    }
+
+    // Orders
+    if (path.indexOf("/orders") === 0) {
+      targetId = "sec-orders";
+    }
+
+    // System
+    if (
+      path.indexOf("/settings") === 0
+    ) {
+      targetId = "sec-system";
+    }
+
+    // Support
+    if (
+	path.indexOf("/backup") === 0 ||
+      path.indexOf("/notices") === 0 ||
+      path.indexOf("/support") === 0
+    ) {
+      targetId = "sec-support";
+    }
+
+    // Dashboard
+    if (path === "/" || path.indexOf("/dashboard") === 0) {
+      targetId = "sec-dashboard";
+    }
+
+    // Accounting/Reports는 "버튼형"이라 아코디언 자동 오픈 없음(전체 닫힘 유지)
+    if (path.indexOf("/accounting") === 0 || path.indexOf("/reports") === 0) {
+      targetId = null;
+    }
+
+    // 섹션 id 목록(접힘/펼침 대상만)
+    var all = ["sec-dashboard", "sec-hr", "sec-payroll", "sec-orders", "sec-system", "sec-support"];
+
+    // collapse 열기/닫기
+    for (var i = 0; i < all.length; i++) {
+      var el = document.getElementById(all[i]);
+      if (!el) continue;
+
+      var inst = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+
+      if (targetId && all[i] === targetId) inst.show();
+      else inst.hide();
+    }
+
+    // 아코디언 헤더 버튼 상태 동기화
+    for (var j = 0; j < all.length; j++) {
+      var secId = all[j];
+      var btn = document.querySelector('[data-bs-target="#' + secId + '"]');
+      if (!btn) continue;
+
+      var isActive = (targetId === secId);
+
+      if (isActive) {
+        btn.classList.remove("collapsed");
+        btn.setAttribute("aria-expanded", "true");
+      } else {
+        btn.classList.add("collapsed");
+        btn.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    // 버튼형(회계/리포트) 활성 처리
+    var accountingBtn = document.getElementById("btn-accounting");
+    var reportsBtn = document.getElementById("btn-reports");
+
+    function setNavActive(btn, active) {
+      if (!btn) return;
+      if (active) {
+        btn.classList.add("active");
+        btn.classList.remove("collapsed");
+        btn.setAttribute("aria-current", "page");
+      } else {
+        btn.classList.remove("active");
+        btn.classList.add("collapsed");
+        btn.removeAttribute("aria-current");
+      }
+    }
+
+    setNavActive(accountingBtn, path.indexOf("/accounting") === 0);
+    setNavActive(reportsBtn, path.indexOf("/reports") === 0);
+
+    // 리스트(서브메뉴)도 현재 경로에 맞게 active 표시(가능하면 가장 구체적인 링크 1개만)
+    var items = document.querySelectorAll(".sidebar .list-group-item");
+    var best = null;
+    var bestLen = -1;
+
+    for (var k = 0; k < items.length; k++) {
+      var a = items[k];
+      a.classList.remove("active");
+      a.removeAttribute("aria-current");
+
+      var href = a.getAttribute("href");
+      if (!href || href === "#") continue;
+
+      // 가장 구체적인 매칭(길이 긴 href 우선)
+      if (path === href || (href !== "/" && path.indexOf(href) === 0)) {
+        if (href.length > bestLen) {
+          best = a;
+          bestLen = href.length;
+        }
+      }
+    }
+
+    if (best) {
+      best.classList.add("active");
+      best.setAttribute("aria-current", "page");
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+  <div class="card p-4 shadow-sm">
+    <div class="d-flex align-items-center mb-2">
+      <h3 class="fw-bold mb-0">에러</h3>
+      <span class="ms-auto badge bg-danger"
+            th:text="${statusCode}">500</span>
+    </div>
+
+    <div class="text-muted small mb-3" th:text="${path}">/path</div>
+
+    <div class="mb-2">
+      <div class="fw-semibold">메시지</div>
+      <div class="text-break" th:text="${message}">message</div>
+    </div>
+
+    <div class="mb-3" th:if="${causeLine != null and !#strings.isEmpty(causeLine)}">
+      <div class="fw-semibold">원인</div>
+      <div class="text-break" th:text="${causeLine}">cause</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-primary" th:href="@{/dashboard}">대시보드로</a>
+      <a class="btn btn-outline-secondary" href="javascript:history.back()">뒤로가기</a>
+    </div>
+  </div>
+</section>
+</body>
+</html>

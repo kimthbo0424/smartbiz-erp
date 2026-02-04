@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+
+<section>
+  <h2 class="fw-bold mb-4">재고 이동 이력</h2>
+
+  <!-- 검색 영역 -->
+  <form class="row g-2 mb-3" onsubmit="return false;">
+    <div class="col-md-3">
+      <input type="text"
+             id="searchProductId"
+             class="form-control form-control-sm"
+             placeholder="상품 ID 검색">
+    </div>
+
+    <div class="col-md-3">
+      <select id="warehouseSelect"
+              class="form-select form-select-sm">
+        <option value="">창고 선택</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <button type="button"
+              onclick="loadMoves(0)"
+              class="btn btn-sm btn-primary">
+        검색
+      </button>
+      <a href="/inventory/move/form"
+         class="btn btn-sm btn-outline-secondary">
+        재고 이동 등록
+      </a>
+    </div>
+  </form>
+
+  <!-- 테이블 -->
+  <div class="table-responsive bg-white rounded shadow-sm">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+      <tr>
+        <th>날짜</th>
+        <th>상품ID</th>
+        <th>상품명</th>
+        <th>출발 창고</th>
+        <th>도착 창고</th>
+        <th>수량</th>
+        <th>사유</th>
+        <th>취소</th>
+      </tr>
+      </thead>
+      <tbody id="moveBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 페이지 -->
+  <div id="paginationArea" class="mt-3 text-center"></div>
+
+<script>
+  let currentPage = 0;
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadWarehouses();
+    loadMoves(0);
+  });
+
+  async function loadWarehouses() {
+    const res = await fetch("/api/warehouse");
+    const result = await res.json();
+
+    if (!result.success) {
+      alert("창고 목록을 불러오지 못했습니다.");
+      return;
+    }
+
+    const select = document.getElementById("warehouseSelect");
+    select.innerHTML = `<option value="">창고 선택</option>`;
+
+    result.data.forEach(w => {
+      select.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${w.id}">${w.name}</option>`
+      );
+    });
+  }
+
+  async function loadMoves(page = 0) {
+    const warehouseId = document.getElementById("warehouseSelect").value;
+    const productKeyword =
+      document.getElementById("searchProductId").value.trim();
+
+    if (!warehouseId) {
+      alert("창고를 선택하세요.");
+      return;
+    }
+
+    currentPage = page;
+
+    const res = await fetch(
+      `/api/inventory/moves/transfer?warehouseId=${warehouseId}&page=${page}`
+    );
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert("이동 이력 조회 실패");
+      return;
+    }
+
+    const filtered = result.data.content.filter(m =>
+      !productKeyword || String(m.productId).includes(productKeyword)
+    );
+
+    renderMoves(filtered);
+    renderPagination(result.data);
+  }
+
+  async function renderMoves(list) {
+    const tbody = document.getElementById("moveBody");
+    tbody.innerHTML = "";
+
+    if (list.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center text-muted">
+            조회된 이동 이력이 없습니다.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    for (const m of list) {
+      const cancelInfo = await checkCancelable(m.transactionId);
+
+      const cancelBtn = cancelInfo.cancelable
+        ? `<button class="btn btn-sm btn-outline-danger"
+                   onclick="cancelMove(${m.transactionId})">취소</button>`
+        : `<button class="btn btn-sm btn-secondary" disabled
+                   title="${cancelInfo.reason}">불가</button>`;
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${m.occurredAt.replace("T"," ")}</td>
+          <td>${m.productId}</td>
+          <td>${m.productName}</td>
+          <td>${m.fromWarehouseName}</td>
+          <td>${m.toWarehouseName}</td>
+          <td>${m.quantity}</td>
+          <td>${m.reason ?? "-"}</td>
+          <td>${cancelBtn}</td>
+        </tr>
+      `);
+    }
+  }
+
+  async function checkCancelable(id) {
+    const res = await fetch(`/api/inventory/transactions/${id}/cancelable`);
+    const result = await res.json();
+    return result.data;
+  }
+
+  async function cancelMove(id) {
+    const reason = prompt("이동 취소 사유를 입력하세요");
+    if (!reason) return;
+
+    const res = await fetch("/api/inventory/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transactionId: id,
+        reason: reason
+      })
+    });
+
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(result.message || "취소 실패");
+      return;
+    }
+
+    alert("이동 취소 완료");
+    loadMoves(currentPage);
+  }
+
+  function renderPagination(pageData) {
+    let html = "";
+    for (let i = 0; i < pageData.totalPages; i++) {
+      html += `
+        <button class="btn btn-sm ${i === pageData.number ? 'btn-primary' : 'btn-outline-primary'}"
+                onclick="loadMoves(${i})">
+          ${i + 1}
+        </button>
+      `;
+    }
+    document.getElementById("paginationArea").innerHTML = html;
+  }
+</script>
+
+</section>
+</body>
+</html>

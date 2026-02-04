@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+    <h2 class="fw-bold mb-4">카테고리 관리</h2>
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="/category/create" class="btn btn-primary">카테고리 등록</a>
+    </div>
+
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>카테고리명</th>
+            <th>레벨</th>
+            <th>부모 카테고리</th>
+            <th>활성 상태</th>
+            <th style="width:150px;">액션</th>
+        </tr>
+        </thead>
+        <tbody id="categoryTableBody"></tbody>
+    </table>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    fetch("/api/categories")
+        .then(res => res.json())
+        .then(result => {
+            if (!result.success) {
+                alert("카테고리 조회 실패");
+                return;
+            }
+            renderCategories(result.data);
+        });
+});
+
+function renderCategories(categories) {
+    const tbody = document.getElementById("categoryTableBody");
+    tbody.innerHTML = "";
+
+    categories.forEach(c => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.name}</td>
+            <td>${c.level}</td>
+            <td>${c.parentId ?? "상위 없음"}</td>
+            <td>
+                ${
+                    c.active === true
+                        ? '<span class="badge bg-success">활성</span>'
+                        : '<span class="badge bg-secondary">비활성</span>'
+                }
+            </td>
+            <td>
+                <a href="/category/edit/${c.id}" class="btn btn-sm btn-warning">수정</a>
+                <button type="button"
+                        class="btn btn-sm btn-danger"
+                        onclick="deleteCategory(${c.id})">
+                    삭제
+                </button>
+            </td>
+        `;
+
+        if (c.active !== true) {
+            tr.classList.add("table-secondary");
+        }
+
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteCategory(id) {
+    if (!confirm("삭제하시겠습니까?")) return;
+
+    fetch(`/api/categories/${id}/deactivate`, {
+        method: "DELETE"
+    })
+    .then(res => {
+        if (res.status === 204) {
+            location.reload();
+        } else {
+            alert("삭제 실패");
+        }
+    });
+}
+</script>
+
+</section>
+</body>
+</html>

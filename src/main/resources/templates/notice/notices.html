@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="~{base :: layout(~{::section})}">
+<body>
+<section>
+
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="fw-bold me-auto">공지사항</h2>
+    <a th:if="${session.auth != null and session.auth <= 2}"
+       class="btn btn-primary btn-sm"
+       th:href="@{/notices/form}">
+      공지 등록
+    </a>
+  </div>
+
+  <style>
+    .post-link { color: inherit; text-decoration: none; }
+    .post-link:hover { text-decoration: underline; }
+    .post-link:visited { color: inherit; }
+  </style>
+
+  <div class="card p-3 shadow-sm mb-3">
+    <form class="row g-2 align-items-center" method="get" th:action="@{/notices}">
+
+		<div class="col-auto">
+		  <select class="form-select form-select-sm" name="searchField">
+		    <option value="title"
+		            th:selected="${param.searchField == null or param.searchField[0] == '' or param.searchField[0] == 'title'}">
+		      제목
+		    </option>
+		    <option value="writer"
+		            th:selected="${param.searchField != null and param.searchField[0] == 'writer'}">
+		      이름
+		    </option>
+		  </select>
+		</div>
+	
+		<div class="col-auto">
+		  <input type="text"
+		         class="form-control form-control-sm"
+		         name="keyword"
+		         placeholder="검색어 입력"
+		         th:value="${param.keyword}">
+		</div>
+
+		<div class="col-auto">
+		  <input type="month"
+		         class="form-control form-control-sm"
+		         name="yearMonth"
+		         th:value="${param.yearMonth}">
+		</div>
+
+	  <div class="col-auto" th:if="${sessionAuth != null and sessionAuth <= 2}">
+	    <select class="form-select form-select-sm" name="status">
+	      <option value="" th:selected="${#strings.isEmpty(param.status)}">전체</option>
+	      <option value="PUBLISHED" th:selected="${param.status == 'PUBLISHED'}">게시</option>
+	      <option value="DRAFT" th:selected="${param.status == 'DRAFT'}">임시</option>
+	      <option value="HIDDEN" th:selected="${param.status == 'HIDDEN'}">숨김</option>
+	    </select>
+	  </div>
+
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm" type="submit">검색</button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="card p-3 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+        <tr>
+          <th style="width: 10%;">글번호</th>
+          <th style="width: 45%;">제목</th>
+          <th style="width: 15%;">작성자</th>
+          <th style="width: 15%;">작성일</th>
+          <th style="width: 15%;">상태</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <tr th:if="${#lists.isEmpty(pinnedPosts) and #lists.isEmpty(posts)}">
+          <td colspan="5" class="text-center text-muted py-4">공지사항이 없습니다</td>
+        </tr>
+
+        <tr th:each="p : ${pinnedPosts}">
+          <td th:text="${p.noticeId}">1</td>
+          <td>
+            <span class="badge text-bg-secondary me-1">고정</span>
+            <a th:href="@{/notice-detail/{id}(id=${p.noticeId})}"
+               class="post-link"
+               th:text="${p.title}">제목</a>
+          </td>
+          <td th:text="${p.writer != null ? p.writer.name : '-'}">작성자</td>
+          <td th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'yyyy-MM-dd') : '-'}">-</td>
+          <td th:text="${p.status.label}">게시</td>
+        </tr>
+
+        <tr th:each="p : ${posts}">
+          <td th:text="${p.noticeId}">1</td>
+          <td>
+            <a th:href="@{/notice-detail/{id}(id=${p.noticeId})}"
+               class="post-link"
+               th:text="${p.title}">제목</a>
+          </td>
+          <td th:text="${p.writer != null ? p.writer.name : '-'}">작성자</td>
+          <td th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'yyyy-MM-dd') : '-'}">-</td>
+          <td th:text="${p.status.label}">게시</td>
+        </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+</body>
+</html>

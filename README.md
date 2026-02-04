@@ -5,30 +5,18 @@ Spring Boot–based ERP system for small business inventory and business managem
 ---
 
 ## Project Overview
-SmartBiz ERP is a team-based backend project developed
-to practice Spring Boot application design and ERP-style domain modeling.
 
----
+SmartBiz ERP is a team-based backend project focused on designing and implementing
+ERP-style domains such as product, client, and inventory management.
 
-## My Role
-
-This project was developed by a team of three, with responsibilities divided by domain.
-
-I was responsible for designing and implementing the following backend domains:
-- **Product**: product management APIs and domain logic
-- **Client**: client (customer/supplier) management and status handling
-- **Inventory**: inventory flow management including in/out, movement, and adjustment
-
-My contributions included:
-- Designing service-layer business logic for assigned domains
-- Managing entity persistence while separating API DTOs from domain entities
-- Managing transactions and ensuring data consistency across inventory operations
-- Defining domain boundaries and coordinating API interfaces with other team members
+The project was developed to practice backend application design,
+domain modeling, and data consistency handling using Spring Boot.
 
 ---
 
 ## Tech Stack
-- Java 17
+
+- Java (JDK 21)
 - Spring Boot
 - Spring Data JPA
 - Gradle
@@ -39,48 +27,75 @@ My contributions included:
 
 ---
 
-## Core Features
+## Team
 
-### Inventory Management
-- Inventory status 조회
-- 입고 / 출고 처리
-- 재고 이동 및 조정
-- 재고 취소 처리
+- Team size: 3 developers
+- Backend-focused team project
+- Responsibilities divided by domain
 
-### Product & Category
-- 상품 CRUD
-- 카테고리 관리
-- 상품 상태 관리
+---
 
-### Client Management
-- 거래처(Customer / Supplier) 관리
-- 거래처 활성/비활성 처리
+## Duration
 
-### Authentication
-- 로그인 / 로그아웃
-- 인증 기반 접근 제어
+- Development period: 2025.11.10 ~ 2026.01.05
+
+---
+
+## Goals & Outcome
+
+### Goals
+- Design ERP-style backend architecture
+- Implement core business domains with clear responsibilities
+- Ensure data consistency using transaction management
+
+### Outcome
+- Successfully implemented product, client, and inventory domains
+- Applied DTO-based API design and service-layer business logic
+- Achieved stable inventory flow handling with transactional consistency
+
+---
+
+## My Contribution
+
+In this team of three, I was responsible for the following backend domains:
+- **Product**: product management APIs and domain logic
+- **Client**: client (customer/supplier) management and status handling
+- **Inventory**: inventory flow management including in/out, movement, and adjustment
+
+My contributions included:
+- Designing service-layer business logic for assigned domains  
+  (담당 도메인의 서비스 레이어 비즈니스 로직 설계)
+- Managing entity persistence while separating API DTOs from domain entities  
+  (API DTO와 도메인 엔티티를 분리하여 영속성 로직을 관리)
+- Managing transactions and ensuring data consistency across inventory operations  
+  (재고 관련 트랜잭션을 관리하고 데이터 정합성을 보장)
+- Coordinating API request/response structures and domain responsibilities with team members  
+  (팀원들과 API 요청/응답 구조 및 도메인 책임 범위를 조율)
 
 ---
 
 ## Project Structure
 ```
 src
- └─ main
-    ├─ java
-    │   └─ com.smartbiz.erp
-    │       ├─ controller
-    │       ├─ service
-    │       ├─ repository
-    │       └─ entity
-    └─ resources
-        ├─ templates
-        └─ application.properties
+└─ main
+├─ java
+│ └─ com.smartbiz.erp
+│ ├─ controller
+│ ├─ service
+│ ├─ repository
+│ └─ entity
+└─ resources
+├─ templates
+└─ application.properties
+
 ```
 
 ---
 
-## What I Learned
+## 💡 What I Learned
+
 - REST API 설계 원칙
 - 트랜잭션 처리와 데이터 정합성
 - JPA 연관관계 설계
 - Redis 캐시 적용
+- 인덱스 설계

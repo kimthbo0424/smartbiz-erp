@@ -34,8 +34,7 @@ public class InventoryService {
             Pageable pageable
     ) {
         return inventoryRepository
-                .findByWarehouseId(warehouseId, pageable)
-                .map(InventoryResponseDto::new);
+        		.findInventoryWithProductName(warehouseId, pageable);
     }
 
     // 입고
@@ -102,6 +101,10 @@ public class InventoryService {
 
         Long fromId = dto.getFromWarehouseId();
         Long toId = dto.getToWarehouseId();
+
+        if (fromId.equals(toId)) {
+            return;
+        }
 
         // 데드락 방지: 항상 작은 창고ID 먼저 잠금
         List<Long> lockOrder = (fromId < toId)
@@ -356,6 +359,33 @@ public class InventoryService {
                         .build()
                 );
     }
+    
+    @Transactional(readOnly = true)
+    public Page<InventoryMoveResponseDto> getMoveTransactionPage(
+            Long warehouseId,
+            Pageable pageable
+    ) {
+        if (warehouseId == null) {
+            return getMoveTransactionPage(pageable);
+        }
+
+        return inventoryTransactionRepository
+                .findMoveTransactionByWarehouseId(warehouseId, pageable)
+                .map(view -> InventoryMoveResponseDto.builder()
+                        .transactionId(view.getTransactionId())
+                        .productId(view.getProductId())
+                        .productName(view.getProductName())
+                        .fromWarehouseId(view.getFromWarehouseId())
+                        .fromWarehouseName(view.getFromWarehouseName())
+                        .toWarehouseId(view.getToWarehouseId())
+                        .toWarehouseName(view.getToWarehouseName())
+                        .quantity(view.getQuantity())
+                        .reason(view.getReason())
+                        .relatedClientId(view.getRelatedClientId())
+                        .occurredAt(view.getOccurredAt())
+                        .build()
+                );
+    }
 
     public void adjustStock(InventoryAdjustDto dto) {
 
@@ -377,6 +407,17 @@ public class InventoryService {
                         .occurredAt(LocalDateTime.now())
                         .build()
         );
+    }
+    
+    // 입출고 내역
+    @Transactional(readOnly = true)
+    public Page<InventoryTransactionResponseDto> getInOutTransactionPage(
+            Long warehouseId,
+            Pageable pageable
+    ) {
+        return inventoryTransactionRepository
+                .findInOutTransactionView(warehouseId, pageable)
+                .map(InventoryTransactionResponseDto::from);
     }
 
     // 레거시 호환용 브릿지 메서드 (기존 코드 안 깨짐)

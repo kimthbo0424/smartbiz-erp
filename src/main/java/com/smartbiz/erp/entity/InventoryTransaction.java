@@ -33,7 +33,6 @@ public class InventoryTransaction {
     @Column(name = "trade_doc_id")
     private Long tradeDocId;
 
-    // 🔥 핵심 수정 포인트
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private InventoryTransactionType type;

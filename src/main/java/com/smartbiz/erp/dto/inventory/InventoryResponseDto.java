@@ -10,14 +10,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class InventoryResponseDto {
 
     private Long productId;
     private Long warehouseId;
     private int quantity;
     private int safetyStockQty;
-    // 필요 시 프론트 표시용
     private String productName;
 
     public InventoryResponseDto(Inventory inventory) {
@@ -26,5 +24,19 @@ public class InventoryResponseDto {
         this.quantity = inventory.getQuantity();
         this.safetyStockQty = inventory.getSafetyStockQty();
         this.productName = null;
+    }
+
+    public InventoryResponseDto(
+            Long productId,
+            Long warehouseId,
+            int quantity,
+            int safetyStockQty,
+            String productName
+    ) {
+        this.productId = productId;
+        this.warehouseId = warehouseId;
+        this.quantity = quantity;
+        this.safetyStockQty = safetyStockQty;
+        this.productName = productName;
     }
 }

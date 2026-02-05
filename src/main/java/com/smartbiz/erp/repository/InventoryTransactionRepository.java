@@ -150,15 +150,56 @@ public interface InventoryTransactionRepository
     	       and outTx.quantity = inTx.quantity
     	       and outTx.reason = inTx.reason
     	       and outTx.occurredAt = inTx.occurredAt
+    	       and outTx.warehouseId <> inTx.warehouseId
     	    join Product p on p.id = outTx.productId
     	    join Warehouse fw on fw.id = outTx.warehouseId
     	    join Warehouse tw on tw.id = inTx.warehouseId
     	    where outTx.type = 'OUT'
-    	      and outTx.reason like '[MOVE]%'
     	      and inTx.type = 'IN'
+    	      and outTx.reason like '[MOVE]%'
     	""")
     	Page<InventoryMoveView> findMoveTransaction(Pageable pageable);
 
+    
+    @Query("""
+    	    select
+    	        outTx.id as transactionId,
+    	        outTx.productId as productId,
+    	        p.name as productName,
+
+    	        outTx.warehouseId as fromWarehouseId,
+    	        fw.name as fromWarehouseName,
+
+    	        inTx.warehouseId as toWarehouseId,
+    	        tw.name as toWarehouseName,
+
+    	        outTx.quantity as quantity,
+    	        outTx.reason as reason,
+    	        outTx.relatedClientId as relatedClientId,
+    	        outTx.occurredAt as occurredAt
+    	    from InventoryTransaction outTx
+    	    join InventoryTransaction inTx
+    	        on outTx.productId = inTx.productId
+    	       and outTx.quantity = inTx.quantity
+    	       and outTx.reason = inTx.reason
+    	       and outTx.occurredAt = inTx.occurredAt
+    	       and outTx.warehouseId <> inTx.warehouseId
+    	    join Product p on p.id = outTx.productId
+    	    join Warehouse fw on fw.id = outTx.warehouseId
+    	    join Warehouse tw on tw.id = inTx.warehouseId
+    	    where outTx.type = 'OUT'
+    	      and inTx.type = 'IN'
+    	      and outTx.reason like '[MOVE]%'
+    	      and (
+    	           :warehouseId is null
+    	           or outTx.warehouseId = :warehouseId
+    	           or inTx.warehouseId = :warehouseId
+    	      )
+    	""")
+    	Page<InventoryMoveView> findMoveTransactionByWarehouseId(
+    	        @Param("warehouseId") Long warehouseId,
+    	        Pageable pageable
+    	);
     
     @Query("""
     	    select t
@@ -186,5 +227,28 @@ public interface InventoryTransactionRepository
     	        @Param("occurredAt") LocalDateTime occurredAt
     	);
 
-    
+    @Query("""
+    	    select
+    	        t.id as id,
+    	        t.productId as productId,
+    	        p.name as productName,
+    	        t.warehouseId as warehouseId,
+    	        w.name as warehouseName,
+    	        t.quantity as quantity,
+    	        t.type as type,
+    	        t.reason as reason,
+    	        t.relatedClientId as relatedClientId,
+    	        t.occurredAt as occurredAt
+    	    from InventoryTransaction t
+    	    join Product p on p.id = t.productId
+    	    join Warehouse w on w.id = t.warehouseId
+    	    where t.type in (com.smartbiz.erp.entity.InventoryTransactionType.IN,
+    	                     com.smartbiz.erp.entity.InventoryTransactionType.OUT)
+    	      and t.warehouseId = :warehouseId
+    	    order by t.occurredAt desc
+    	""")
+    	Page<InventoryTransactionView> findInOutTransactionView(
+    	    @Param("warehouseId") Long warehouseId,
+    	    Pageable pageable
+    	); 
 }

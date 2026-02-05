@@ -9,6 +9,9 @@ import com.smartbiz.erp.entity.enums.ProductStatus;
 import com.smartbiz.erp.repository.CategoryRepository;
 import com.smartbiz.erp.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
@@ -57,6 +60,14 @@ public class ProductService {
                         new IllegalArgumentException("상품이 존재하지 않습니다. id=" + id)
                 );
     }
+    
+    public List<ProductResponseDto> getAllProducts() {
+        return productRepository.findAll().stream()
+            .filter(Product::getIsActive)
+            .map(ProductResponseDto::new)
+            .toList();
+    }
+
 
     /* ===============================
        생성 (CREATE)

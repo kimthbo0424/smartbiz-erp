@@ -81,7 +81,7 @@
     currentPage = page;
 
     const res = await fetch(
-      `/api/inventory/moves/adjust?warehouseId=${warehouseId}&page=${page}`
+      `/api/inventory/moves/inout?warehouseId=${warehouseId}&page=${page}&size=10`
     );
     const result = await res.json();
 

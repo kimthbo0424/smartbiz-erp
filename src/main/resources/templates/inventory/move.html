@@ -28,7 +28,7 @@
               class="btn btn-sm btn-primary">
         검색
       </button>
-      <a href="/inventory/move/form"
+      <a href="/inventory/move-form"
          class="btn btn-sm btn-outline-secondary">
         재고 이동 등록
       </a>
@@ -62,7 +62,6 @@
 
   document.addEventListener("DOMContentLoaded", async () => {
     await loadWarehouses();
-    loadMoves(0);
   });
 
   async function loadWarehouses() {

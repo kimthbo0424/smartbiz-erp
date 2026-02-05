@@ -17,6 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
+
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -95,11 +99,19 @@ public class InventoryRestController {
     // 7. 이동 이력 조회
     @GetMapping("/moves/transfer")
     public ResponseEntity<ApiResponse<Page<InventoryMoveResponseDto>>> getMoveTransactionPage(
-            Pageable pageable
+            @RequestParam(name = "warehouseId", required = false) Long warehouseId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
     ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "occurredAt")
+        );
+
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        inventoryService.getMoveTransactionPage(pageable)
+                        inventoryService.getMoveTransactionPage(warehouseId, pageable)
                 )
         );
     }
@@ -112,8 +124,28 @@ public class InventoryRestController {
         inventoryService.cancelTransaction(request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+    
+    // 9. 입출고
+    @GetMapping("/moves/inout")
+    public ResponseEntity<ApiResponse<Page<InventoryTransactionResponseDto>>> getInOutTransactions(
+            @RequestParam("warehouseId") Long warehouseId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "occurredAt")
+        );
 
-    // 9. 취소 가능 여부
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        inventoryService.getInOutTransactionPage(warehouseId, pageable)
+                )
+        );
+    }
+
+    // 10. 취소 가능 여부
     @GetMapping("/transactions/{id}/cancelable")
     public ResponseEntity<ApiResponse<InventoryCancelCheckResponseDto>> checkCancelable(
             @PathVariable("id") Long id
@@ -125,7 +157,7 @@ public class InventoryRestController {
         );
     }
 
-    // 10. 리포트
+    // 11. 리포트
     @GetMapping("/moves/report")
     public ResponseEntity<ApiResponse<List<InventoryTransaction>>> getReportTransactions(
             @RequestParam("warehouseId") Long warehouseId
@@ -137,7 +169,7 @@ public class InventoryRestController {
         );
     }
 
-    // 11. 안전재고 수정
+    // 12. 안전재고 수정
     @PatchMapping("/safety-stock")
     public ResponseEntity<ApiResponse<Void>> updateSafetyStock(
             @RequestParam("warehouseId") Long warehouseId,

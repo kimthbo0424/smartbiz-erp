@@ -13,14 +13,14 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 public class ApiExceptionHandler {
 
     // 400 - 잘못된 요청 (비즈니스 검증 실패)
-    @ExceptionHandler(IllegalArgumentException.class)
+    /*@ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(
             IllegalArgumentException ex
     ) {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.fail(ex.getMessage()));
-    }
+    }*/
 
     //400 - Validation 실패 (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,5 +1,6 @@
 package com.smartbiz.erp.repository;
 
+import com.smartbiz.erp.dto.inventory.InventoryResponseDto;
 import com.smartbiz.erp.entity.Inventory;
 
 import jakarta.persistence.LockModeType;
@@ -56,4 +57,22 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
             @Param("productId") Long productId,
             @Param("warehouseIds") java.util.List<Long> warehouseIds
     );
+    
+    @Query("""
+    	    select new com.smartbiz.erp.dto.inventory.InventoryResponseDto(
+    	        i.productId,
+    	        i.warehouseId,
+    	        i.quantity,
+    	        i.safetyStockQty,
+    	        p.name
+    	    )
+    	    from Inventory i
+    	    join Product p on p.id = i.productId
+    	    where i.warehouseId = :warehouseId
+    	""")
+    	Page<InventoryResponseDto> findInventoryWithProductName(
+    	        @Param("warehouseId") Long warehouseId,
+    	        Pageable pageable
+    	);
+
 }

@@ -72,7 +72,7 @@
        =============================== */
     async function loadProducts() {
       try {
-        const res = await fetch("/api/products");
+    	const res = await fetch("/api/products/simple");
         const result = await res.json();
 
         if (!result.success) {

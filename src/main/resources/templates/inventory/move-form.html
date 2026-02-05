@@ -66,7 +66,7 @@
         // 상품 로드
         async function loadProducts() {
             try {
-                const res = await fetch("/api/products");
+                const res = await fetch("/api/products/simple");
                 if (!res.ok) throw new Error("상품 API 호출 실패");
 
                 const result = await res.json();

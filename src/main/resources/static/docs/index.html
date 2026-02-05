@@ -474,7 +474,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h3 id="_1_재고_현황_조회">1.1. 1. 재고 현황 조회</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight nowrap"><code data-lang="http" class="language-http hljs">GET /api/inventory?warehouseId=237 HTTP/1.1
+<pre class="highlightjs highlight nowrap"><code data-lang="http" class="language-http hljs">GET /api/inventory?warehouseId=276 HTTP/1.1
 Accept: application/json
 Host: localhost:8080</code></pre>
 </div>
@@ -485,7 +485,7 @@ Host: localhost:8080</code></pre>
 Content-Type: application/json
 Content-Length: 286
 
-{"success":true,"data":{"content":[],"pageable":"INSTANCE","last":true,"totalPages":1,"totalElements":0,"size":0,"number":0,"sort":{"empty":true,"unsorted":true,"sorted":false},"first":true,"numberOfElements":0,"empty":true},"message":"요청이 성공적으로 처리되었습니다."}</code></pre>
+{"success":true,"data":{"content":[],"pageable":"INSTANCE","last":true,"totalElements":0,"totalPages":1,"size":0,"number":0,"sort":{"empty":true,"sorted":false,"unsorted":true},"first":true,"numberOfElements":0,"empty":true},"message":"요청이 성공적으로 처리되었습니다."}</code></pre>
 </div>
 </div>
 </div>
@@ -504,7 +504,7 @@ Host: localhost:8080</code></pre>
 Content-Type: application/json
 Content-Length: 377
 
-{"success":true,"data":{"content":[{"productId":1,"warehouseId":1,"quantity":100,"safetyStockQty":20,"productName":"상품A"}],"pageable":"INSTANCE","last":true,"totalPages":1,"totalElements":1,"size":1,"number":0,"sort":{"empty":true,"unsorted":true,"sorted":false},"first":true,"numberOfElements":1,"empty":false},"message":"요청이 성공적으로 처리되었습니다."}</code></pre>
+{"success":true,"data":{"content":[{"productId":1,"warehouseId":1,"quantity":100,"safetyStockQty":20,"productName":"상품A"}],"pageable":"INSTANCE","last":true,"totalElements":1,"totalPages":1,"size":1,"number":0,"sort":{"empty":true,"sorted":false,"unsorted":true},"first":true,"numberOfElements":1,"empty":false},"message":"요청이 성공적으로 처리되었습니다."}</code></pre>
 </div>
 </div>
 </div>
@@ -519,7 +519,7 @@ Content-Length: 61
 Host: localhost:8080
 
 {
-  "warehouseId": 231,
+  "warehouseId": 270,
   "productId": 1,
   "quantity": 10
 }</code></pre>
@@ -546,7 +546,7 @@ Content-Length: 60
 Host: localhost:8080
 
 {
-  "warehouseId": 240,
+  "warehouseId": 279,
   "productId": 1,
   "quantity": 5
 }</code></pre>
@@ -573,8 +573,8 @@ Content-Length: 88
 Host: localhost:8080
 
 {
-  "fromWarehouseId": 239,
-  "toWarehouseId": 239,
+  "fromWarehouseId": 278,
+  "toWarehouseId": 278,
   "productId": 1,
   "quantity": 5
 }</code></pre>
@@ -601,7 +601,7 @@ Content-Length: 103
 Host: localhost:8080
 
 {
-  "warehouseId": 234,
+  "warehouseId": 273,
   "productId": 1,
   "adjustQuantity": -3,
   "reason": "재고 실사 차이"
